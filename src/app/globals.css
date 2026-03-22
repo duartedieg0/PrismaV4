@@ -184,6 +184,38 @@ pre {
   line-height: 1.6;
 }
 
+/* Landing page interactions */
+.lp-card {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.lp-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 44px rgba(28, 25, 23, 0.08);
+}
+
+.lp-faq summary {
+  list-style: none;
+}
+
+.lp-faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.lp-faq summary span[aria-hidden] {
+  transition: transform 200ms ease;
+}
+
+.lp-faq[open] summary span[aria-hidden] {
+  transform: rotate(45deg);
+}
+
+.lp-faq[open] summary {
+  color: var(--accent-strong);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;

@@ -1,52 +1,66 @@
-import { trustSignals } from "@/features/public-experience/content";
+import { trustMetrics } from "@/features/public-experience/content";
 
 export function TrustStrip() {
   return (
-    <section
-      aria-label="Sinais de confiança institucional"
-      style={{ paddingBlock: "0.25rem 0 0.5rem", marginTop: "-1.2rem", position: "relative", zIndex: 2 }}
-    >
+    <section aria-label="Indicadores de confiança" style={{ paddingBlock: "0.75rem" }}>
       <ul
         style={{
           listStyle: "none",
           display: "grid",
           gap: "1rem",
-          gridTemplateColumns: "repeat(auto-fit, minmax(15rem, 1fr))",
+          gridTemplateColumns: "repeat(auto-fit, minmax(min(14rem, 100%), 1fr))",
           padding: 0,
           margin: 0,
         }}
       >
-        {[
-          { value: "+500k", label: "Provas adaptadas" },
-          { value: "85%", label: "Redução de tempo" },
-          { value: "Tecnologia Certificada", label: "Aprovado por especialistas em pedagogia." },
-        ].map((signal, index) => (
+        {trustMetrics.map((metric, index) => (
           <li
-            key={signal.value}
+            key={metric.value}
+            className="lp-card"
             style={{
-              padding: "1.2rem 1.35rem",
-              borderRadius: "0.9rem",
-              background: index === 2 ? "#bff5e3" : "#fffdf8",
-              border: "1px solid rgba(110,122,117,0.08)",
-              color: "var(--color-text-primary)",
-              boxShadow: "0 12px 30px rgba(28, 25, 23, 0.05)",
+              padding: "1.35rem 1.5rem",
+              borderRadius: "1.1rem",
+              background:
+                index === 1
+                  ? "linear-gradient(135deg, rgba(191, 245, 227, 0.4), rgba(191, 245, 227, 0.15))"
+                  : "#fffdf8",
+              border:
+                index === 1
+                  ? "1px solid rgba(13, 124, 102, 0.12)"
+                  : "1px solid rgba(110,122,117,0.08)",
+              boxShadow: "0 8px 24px rgba(28, 25, 23, 0.04)",
             }}
           >
-            <div style={{ display: "grid", gap: "0.25rem" }}>
+            <div style={{ display: "grid", gap: "0.3rem" }}>
               <strong
                 style={{
-                  fontSize: index === 2 ? "1.25rem" : "2rem",
+                  fontSize: "2.2rem",
                   fontWeight: 800,
+                  fontFamily: "var(--font-serif), serif",
                   color: "var(--accent-strong)",
                   letterSpacing: "-0.03em",
+                  lineHeight: 1.1,
                 }}
               >
-                {signal.value}
+                {metric.value}
               </strong>
-              <span style={{ color: "var(--color-text-muted)", fontSize: "0.9rem" }}>{signal.label}</span>
-              {index < trustSignals.length ? (
-                <span style={{ color: "rgba(97,112,107,0.76)", fontSize: "0.78rem" }}>{trustSignals[index]}</span>
-              ) : null}
+              <span
+                style={{
+                  fontWeight: 700,
+                  fontSize: "0.95rem",
+                  color: "var(--color-text-primary)",
+                }}
+              >
+                {metric.label}
+              </span>
+              <span
+                style={{
+                  color: "var(--color-text-muted)",
+                  fontSize: "0.82rem",
+                }}
+              >
+                {metric.detail}
+              </span>
             </div>
           </li>
         ))}
