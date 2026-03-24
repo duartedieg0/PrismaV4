@@ -112,7 +112,7 @@ function formatAlternatives(
     .join("\n")}`;
 }
 
-function parseAdaptationPayload(
+export function parseAdaptationPayload(
   text: string,
   alternatives: Array<{ label: string; text: string }> | null,
   correctAnswer: string | null,
@@ -124,29 +124,33 @@ function parseAdaptationPayload(
     };
   }
 
-  let parsed: { adaptedStatement?: string; adaptedAlternatives?: string[] } | null = null;
+  let parsed: {
+    adaptedStatement?: string;
+    adaptedAlternatives?: Array<{ originalLabel: string; text: string }>;
+  } | null = null;
 
   try {
-    parsed = JSON.parse(text) as { adaptedStatement?: string; adaptedAlternatives?: string[] };
+    parsed = JSON.parse(text) as typeof parsed;
   } catch {
     const jsonMatch =
       text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ??
       text.match(/(\{[\s\S]*\})/);
 
     if (jsonMatch?.[1]) {
-      parsed = JSON.parse(jsonMatch[1]) as {
-        adaptedStatement?: string;
-        adaptedAlternatives?: string[];
-      };
+      parsed = JSON.parse(jsonMatch[1]) as typeof parsed;
     }
   }
 
-  const adaptedAlternatives = parsed?.adaptedAlternatives?.map((adaptedText, index) => ({
+  const originalsByLabel = new Map(
+    alternatives.map((alt) => [alt.label, alt]),
+  );
+
+  const adaptedAlternatives = parsed?.adaptedAlternatives?.map((adapted, index) => ({
     id: `alt-${index}`,
-    label: alternatives[index]?.label ?? String(index + 1),
-    originalText: alternatives[index]?.text ?? "",
-    adaptedText: adaptedText?.trim() || alternatives[index]?.text || "",
-    isCorrect: correctAnswer === alternatives[index]?.label,
+    label: adapted.originalLabel,
+    originalText: originalsByLabel.get(adapted.originalLabel)?.text ?? "",
+    adaptedText: adapted.text?.trim() || "",
+    isCorrect: correctAnswer === adapted.originalLabel,
     position: index,
   })) ?? null;
 
