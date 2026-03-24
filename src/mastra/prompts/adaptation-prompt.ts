@@ -1,6 +1,6 @@
 import type { QuestionAlternative } from "@/domains/exams/contracts";
 
-export const ADAPTATION_PROMPT_VERSION = "adaptation@v1";
+export const ADAPTATION_PROMPT_VERSION = "adaptation@v2";
 
 type AdaptationPromptInput = {
   agentPrompt: string;
@@ -51,13 +51,18 @@ Gere a versão adaptada desta questão para um aluno com ${supportName}, mantend
 Retorne sua resposta no seguinte formato JSON (IMPORTANTE: use \\n para quebras de linha dentro das strings):
 {
   "adaptedStatement": "texto do enunciado adaptado",
-  "adaptedAlternatives": ["texto da alternativa a adaptada", "texto da alternativa b adaptada", ...]
+  "adaptedAlternatives": [
+    {"originalLabel": "A", "text": "texto da alternativa a adaptada"},
+    {"originalLabel": "B", "text": "texto da alternativa b adaptada"}
+  ]
 }
 
 ATENÇÃO:
-- O array adaptedAlternatives deve conter exatamente ${alternatives.length} elementos
-- Cada elemento deve ser apenas o texto da alternativa, SEM os prefixos "a)", "b)", etc.
-- Mantenha a ordem das alternativas
+- Cada elemento de adaptedAlternatives deve conter "originalLabel" (a letra da alternativa original) e "text" (o texto adaptado)
+- Cada "text" deve ser apenas o texto da alternativa, SEM os prefixos "a)", "b)", etc.
+- Você PODE reduzir a quantidade de alternativas se isso for pedagogicamente adequado para o apoio ${supportName}
+- Você NUNCA deve remover a alternativa correta (${correctAnswer ?? "Não informada"})
+- Se reduzir, mantenha no mínimo 2 alternativas (incluindo a correta)
 - Aplique o mesmo nível de adaptação tanto no enunciado quanto nas alternativas
 - Use \\n para representar quebras de linha dentro das strings JSON (não use quebras de linha literais)`;
   }

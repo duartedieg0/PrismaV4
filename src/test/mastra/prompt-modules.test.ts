@@ -53,6 +53,7 @@ describe("mastra prompt modules", () => {
 
     expect(essayPrompt).toMatch(/retorne apenas o texto da questão adaptada/i);
     expect(objectivePrompt).toMatch(/retorne sua resposta no seguinte formato json/i);
-    expect(objectivePrompt).toContain("exactamente 2 elementos".replace("exactamente", "exatamente"));
+    expect(objectivePrompt).toContain("originalLabel");
+    expect(objectivePrompt).toContain("Você PODE reduzir a quantidade de alternativas");
   });
 });

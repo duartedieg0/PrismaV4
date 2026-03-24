@@ -106,7 +106,7 @@ describe("analyze and adapt workflow", () => {
       expect.objectContaining({
         supportId: "support-1",
         agentVersion: 3,
-        promptVersion: "adaptation@v1/agent-v3",
+        promptVersion: "adaptation@v2/agent-v3",
       }),
     );
   });
