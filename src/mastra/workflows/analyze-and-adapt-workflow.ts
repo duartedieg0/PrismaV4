@@ -124,20 +124,22 @@ export function parseAdaptationPayload(
     };
   }
 
-  let parsed: {
+  type ParsedPayload = {
     adaptedStatement?: string;
     adaptedAlternatives?: Array<{ originalLabel: string; text: string }>;
-  } | null = null;
+  };
+
+  let parsed: ParsedPayload | null = null;
 
   try {
-    parsed = JSON.parse(text) as typeof parsed;
+    parsed = JSON.parse(text) as ParsedPayload;
   } catch {
     const jsonMatch =
       text.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/) ??
       text.match(/(\{[\s\S]*\})/);
 
     if (jsonMatch?.[1]) {
-      parsed = JSON.parse(jsonMatch[1]) as typeof parsed;
+      parsed = JSON.parse(jsonMatch[1]) as ParsedPayload;
     }
   }
 
