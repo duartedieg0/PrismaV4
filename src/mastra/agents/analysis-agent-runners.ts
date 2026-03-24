@@ -24,9 +24,14 @@ const bloomAnalysisSchema = z.object({
   analysis: z.string().min(1),
 });
 
+const adaptedAlternativeItemSchema = z.object({
+  originalLabel: z.string().min(1),
+  text: z.string().min(1),
+});
+
 const objectiveAdaptationSchema = z.object({
   adaptedStatement: z.string().min(1),
-  adaptedAlternatives: z.array(z.string().min(1)).min(1),
+  adaptedAlternatives: z.array(adaptedAlternativeItemSchema).min(1),
 });
 
 const essayAdaptationSchema = z.object({
@@ -35,21 +40,40 @@ const essayAdaptationSchema = z.object({
 
 function mapAdaptedAlternatives(
   alternatives: QuestionAlternative[],
-  adaptedAlternatives: string[],
+  adaptedAlternatives: Array<{ originalLabel: string; text: string }>,
   correctAnswer: string | null,
 ): AdaptedAlternative[] {
-  if (adaptedAlternatives.length !== alternatives.length) {
-    throw new Error("O agente retornou uma quantidade inválida de alternativas adaptadas.");
+  const originalsByLabel = new Map(
+    alternatives.map((alt) => [alt.label, alt]),
+  );
+
+  const mapped = adaptedAlternatives.map((adapted, index) => {
+    const original = originalsByLabel.get(adapted.originalLabel);
+    if (!original) {
+      throw new Error(
+        `O agente retornou a alternativa "${adapted.originalLabel}" que não existe na questão original.`,
+      );
+    }
+    return {
+      id: `alt-${index}`,
+      label: adapted.originalLabel,
+      originalText: original.text,
+      adaptedText: adapted.text.trim(),
+      isCorrect: correctAnswer === adapted.originalLabel,
+      position: index,
+    };
+  });
+
+  if (
+    correctAnswer &&
+    !mapped.some((alt) => alt.isCorrect)
+  ) {
+    throw new Error(
+      `A alternativa correta (${correctAnswer}) foi removida pelo agente de adaptação.`,
+    );
   }
 
-  return alternatives.map((alternative, index) => ({
-    id: `alt-${index}`,
-    label: alternative.label,
-    originalText: alternative.text,
-    adaptedText: adaptedAlternatives[index]?.trim() || alternative.text,
-    isCorrect: correctAnswer === alternative.label,
-    position: index,
-  }));
+  return mapped;
 }
 
 export async function runBnccAnalysisAgent(input: {
