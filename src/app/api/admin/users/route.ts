@@ -1,24 +1,16 @@
-import { NextResponse } from "next/server";
-import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
+import { withAdminRoute } from "@/app/api/admin/with-admin-route";
 import { toAdminUserListItem } from "@/features/admin/users/service";
-import { createClient } from "@/gateways/supabase/server";
+import { apiSuccess, apiInternalError } from "@/services/errors/api-response";
 
-export async function GET() {
-  const access = await requireAdminRouteAccess();
-
-  if (access.kind === "error") {
-    return access.response;
-  }
-
-  const supabase = await createClient();
+export const GET = withAdminRoute(async ({ supabase }) => {
   const { data, error } = await supabase
     .from("profiles")
     .select("id, full_name, email, avatar_url, role, blocked, created_at")
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json((data ?? []).map(toAdminUserListItem));
-}
+  return apiSuccess((data ?? []).map(toAdminUserListItem));
+});

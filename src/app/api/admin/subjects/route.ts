@@ -1,40 +1,25 @@
-import { NextResponse } from "next/server";
-import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
+import { withAdminRoute } from "@/app/api/admin/with-admin-route";
 import { toEnabledNameEntity } from "@/features/admin/curriculum/service";
 import { createEnabledNameEntitySchema } from "@/features/admin/curriculum/validation";
-import { createClient } from "@/gateways/supabase/server";
+import { apiSuccess, apiValidationError, apiInternalError } from "@/services/errors/api-response";
 
-export async function GET() {
-  const access = await requireAdminRouteAccess();
-
-  if (access.kind === "error") {
-    return access.response;
-  }
-
-  const supabase = await createClient();
+export const GET = withAdminRoute(async ({ supabase }) => {
   const { data, error } = await supabase.from("subjects").select("id, name, enabled").order("name");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json((data ?? []).map(toEnabledNameEntity));
-}
+  return apiSuccess((data ?? []).map(toEnabledNameEntity));
+});
 
-export async function POST(request: Request) {
-  const access = await requireAdminRouteAccess();
-
-  if (access.kind === "error") {
-    return access.response;
-  }
-
+export const POST = withAdminRoute(async ({ supabase }, request) => {
   const parsed = createEnabledNameEntitySchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
-  const supabase = await createClient();
   const { data, error } = await supabase
     .from("subjects")
     .insert({ name: parsed.data.name })
@@ -42,8 +27,8 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(toEnabledNameEntity(data), { status: 201 });
-}
+  return apiSuccess(toEnabledNameEntity(data), 201);
+});

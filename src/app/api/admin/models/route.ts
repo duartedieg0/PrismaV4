@@ -1,43 +1,27 @@
-import { NextResponse } from "next/server";
-import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
+import { withAdminRoute } from "@/app/api/admin/with-admin-route";
 import { createModelSchema } from "@/features/admin/models/validation";
 import { toAdminModelView } from "@/features/admin/models/service";
-import { createClient } from "@/gateways/supabase/server";
+import { apiSuccess, apiValidationError, apiInternalError } from "@/services/errors/api-response";
 
-export async function GET() {
-  const access = await requireAdminRouteAccess();
-
-  if (access.kind === "error") {
-    return access.response;
-  }
-
-  const supabase = await createClient();
+export const GET = withAdminRoute(async ({ supabase }) => {
   const { data, error } = await supabase
     .from("ai_models")
     .select("id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at")
     .order("name");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json((data ?? []).map(toAdminModelView));
-}
+  return apiSuccess((data ?? []).map(toAdminModelView));
+});
 
-export async function POST(request: Request) {
-  const access = await requireAdminRouteAccess();
-
-  if (access.kind === "error") {
-    return access.response;
-  }
-
+export const POST = withAdminRoute(async ({ supabase }, request) => {
   const parsed = createModelSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
-
-  const supabase = await createClient();
 
   if (parsed.data.isDefault) {
     await supabase.from("ai_models").update({ is_default: false }).neq("id", "");
@@ -59,8 +43,8 @@ export async function POST(request: Request) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(toAdminModelView(data), { status: 201 });
-}
+  return apiSuccess(toAdminModelView(data), 201);
+});
