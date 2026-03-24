@@ -45,6 +45,44 @@ describe("copyable block", () => {
     });
   });
 
+  it("formats reduced alternatives with sequential labels and correct marker", () => {
+    const block = createCopyableBlock({
+      adaptedContent: "Quanto é metade mais um quarto?",
+      questionType: "objective",
+      adaptedAlternatives: [
+        {
+          id: "alt-0",
+          label: "A",
+          originalText: "1/3",
+          adaptedText: "um terço",
+          isCorrect: false,
+          position: 0,
+        },
+        {
+          id: "alt-1",
+          label: "C",
+          originalText: "3/4",
+          adaptedText: "três quartos",
+          isCorrect: true,
+          position: 1,
+        },
+        {
+          id: "alt-2",
+          label: "E",
+          originalText: "1/1",
+          adaptedText: "um inteiro",
+          isCorrect: false,
+          position: 2,
+        },
+      ],
+    });
+
+    expect(block).toEqual({
+      type: "objective",
+      text: "Quanto é metade mais um quarto?\n\na) um terço\nb) três quartos ✓\nc) um inteiro",
+    });
+  });
+
   it("builds a full exam block for a single support", () => {
     const text = buildExamCopyBlock({
       examTitle: "Matemática • 7º ano",
