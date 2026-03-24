@@ -13,7 +13,7 @@ export const GET = withAdminRoute(async ({ supabase }) => {
     return apiInternalError(error.message);
   }
 
-  return apiSuccess((data ?? []).map((item) => toAdminSupportView(item as never)));
+  return apiSuccess((data ?? []).map((item) => toAdminSupportView(item )));
 });
 
 export const POST = withAdminRoute(async ({ supabase }, request) => {
@@ -53,5 +53,5 @@ export const POST = withAdminRoute(async ({ supabase }, request) => {
     return apiInternalError(error.message);
   }
 
-  return apiSuccess(toAdminSupportView(data as never), 201);
+  return apiSuccess(toAdminSupportView(data ), 201);
 });

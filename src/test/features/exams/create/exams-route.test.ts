@@ -52,9 +52,8 @@ describe("exams route", () => {
     );
 
     expect(response.status).toBe(401);
-    await expect(response.json()).resolves.toEqual({
-      error: "Não autenticado.",
-    });
+    const body = await response.json();
+    expect(body.error.code).toBe("UNAUTHORIZED");
   });
 
   it("returns 400 when the multipart payload is invalid", async () => {
@@ -79,9 +78,8 @@ describe("exams route", () => {
     } as unknown as Request);
 
     expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({
-      error: "Formato inválido para apoios selecionados.",
-    });
+    const body = await response.json();
+    expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
   it("returns 201 and the exam id when creation succeeds", async () => {
@@ -144,8 +142,7 @@ describe("exams route", () => {
       }),
     );
     expect(response.status).toBe(202);
-    await expect(response.json()).resolves.toEqual({
-      examId: "exam-123",
-    });
+    const body = await response.json();
+    expect(body.data.examId).toBe("exam-123");
   });
 });

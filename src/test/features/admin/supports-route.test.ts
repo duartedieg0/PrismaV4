@@ -82,9 +82,10 @@ describe("supports route", () => {
       error: null,
     });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/admin/supports"));
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual([
+    const body = await response.json();
+    expect(body.data).toEqual([
       expect.objectContaining({
         agentName: "BNCC",
         modelIdentifier: "gpt-5.4",

@@ -3,6 +3,7 @@ import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
 import { buildModelPatch, toAdminModelView } from "@/features/admin/models/service";
 import { updateModelSchema } from "@/features/admin/models/validation";
 import { createClient } from "@/gateways/supabase/server";
+import { apiInternalError, apiSuccess, apiValidationError } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -19,7 +20,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = updateModelSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const supabase = await createClient();
@@ -36,10 +37,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(toAdminModelView(data));
+  return apiSuccess(toAdminModelView(data));
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
@@ -59,7 +60,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     .select("id");
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return apiInternalError(updateError.message);
   }
 
   const { error } = await supabase
@@ -68,10 +69,10 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     .eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json({
+  return apiSuccess({
     success: true,
     disabledSupports: updatedSupports?.length ?? 0,
   });

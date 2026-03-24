@@ -6,6 +6,7 @@ import { runPdfExtractionAgent } from "@/mastra/agents/extraction-agent-runner";
 import { runExtraction } from "@/services/ai/run-extraction";
 import { logError } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
+import { apiError, apiInternalError, apiSuccess, apiUnauthorized } from "@/services/errors/api-response";
 
 export const maxDuration = 300;
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const formData = await request.formData();
@@ -59,10 +60,7 @@ export async function POST(request: Request) {
   const supportIds = parseSupportIds(formData.get("supportIds"));
 
   if (!supportIds) {
-    return NextResponse.json(
-      { error: "Formato inválido para apoios selecionados." },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "Formato inválido para apoios selecionados.", 400);
   }
 
   const pdfError = validatePdfFile(uploadedFile);
@@ -84,13 +82,12 @@ export async function POST(request: Request) {
   });
 
   if (!validation.success || pdfError || !uploadedFile) {
-    return NextResponse.json(
-      {
-        error: pdfError ?? getFirstValidationMessage(
-          validation.success ? {} : validation.error.flatten().fieldErrors,
-        ),
-      },
-      { status: 400 },
+    return apiError(
+      "VALIDATION_ERROR",
+      pdfError ?? getFirstValidationMessage(
+        validation.success ? {} : validation.error.flatten().fieldErrors,
+      ),
+      400,
     );
   }
 
@@ -242,14 +239,9 @@ export async function POST(request: Request) {
       }
     });
 
-    return NextResponse.json({ examId: result.examId }, { status: 202 });
+    return apiSuccess({ examId: result.examId }, 202);
   } catch (error) {
     logError("Falha ao criar exame", createRequestContext(), error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Erro ao criar exame.",
-      },
-      { status: 500 },
-    );
+    return apiInternalError(error instanceof Error ? error.message : "Erro ao criar exame.");
   }
 }

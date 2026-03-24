@@ -8,25 +8,11 @@ type ProfileRecord = {
   blocked: boolean;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SupabaseLike = { from: (...args: any[]) => any; auth: { getUser: () => any } };
+
 type GetProfileOrRedirectOptions = {
-  createClient: () => Promise<{
-    from(table: "profiles"): {
-      select(query: string): {
-        eq(column: "id", value: string): {
-          single(): PromiseLike<{
-            data: ProfileRecord | null;
-            error: { message: string } | null;
-          }>;
-        };
-      };
-    };
-    auth: {
-      getUser(): Promise<{
-        data: { user: { id: string; email?: string | null } | null };
-        error: { message: string } | null;
-      }>;
-    };
-  }>;
+  createClient: () => Promise<SupabaseLike>;
 };
 
 async function readProfileWithFallback(

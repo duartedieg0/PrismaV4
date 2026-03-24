@@ -34,7 +34,8 @@ export default function AdminModelsPage() {
         throw new Error("Não foi possível carregar modelos.");
       }
 
-      setModels(await response.json() as AdminModelView[]);
+      const body = await response.json();
+      setModels(body.data as AdminModelView[]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar modelos.");
     } finally {

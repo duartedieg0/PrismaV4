@@ -51,7 +51,7 @@ export function ExtractionReview({
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Erro ao salvar respostas.");
+        throw new Error(payload.error?.message ?? "Erro ao salvar respostas.");
       }
 
       toast.success("Respostas salvas. A adaptação foi iniciada.");

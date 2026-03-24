@@ -37,15 +37,15 @@ export default function AdminSupportsPage() {
         throw new Error("Não foi possível carregar apoios, agentes ou modelos.");
       }
 
-      const [nextSupports, nextAgents, nextModels] = await Promise.all([
-        supportsResponse.json() as Promise<AdminSupportView[]>,
-        agentsResponse.json() as Promise<Array<{ id: string; name: string; enabled: boolean }>>,
-        modelsResponse.json() as Promise<Array<{ id: string; name: string; enabled: boolean }>>,
+      const [supportsBody, agentsBody, modelsBody] = await Promise.all([
+        supportsResponse.json() as Promise<{ data: AdminSupportView[] }>,
+        agentsResponse.json() as Promise<{ data: Array<{ id: string; name: string; enabled: boolean }> }>,
+        modelsResponse.json() as Promise<{ data: Array<{ id: string; name: string; enabled: boolean }> }>,
       ]);
 
-      setSupports(nextSupports);
-      setAgents(nextAgents.filter((agent) => agent.enabled).map(({ id, name }) => ({ id, name })));
-      setModels(nextModels.filter((model) => model.enabled).map(({ id, name }) => ({ id, name })));
+      setSupports(supportsBody.data);
+      setAgents(agentsBody.data.filter((agent) => agent.enabled).map(({ id, name }) => ({ id, name })));
+      setModels(modelsBody.data.filter((model) => model.enabled).map(({ id, name }) => ({ id, name })));
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar dados.");
     } finally {
@@ -81,8 +81,8 @@ export default function AdminSupportsPage() {
       );
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Não foi possível salvar o apoio.");
+        const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+        throw new Error(payload?.error?.message ?? "Não foi possível salvar o apoio.");
       }
 
       toast.success(editingId ? "Apoio atualizado com sucesso." : "Apoio criado com sucesso.");
@@ -98,8 +98,8 @@ export default function AdminSupportsPage() {
       const response = await fetch(`/api/admin/supports/${supportId}`, { method: "DELETE" });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Não foi possível excluir o apoio.");
+        const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+        throw new Error(payload?.error?.message ?? "Não foi possível excluir o apoio.");
       }
 
       toast.success("Apoio excluído com sucesso.");

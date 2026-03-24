@@ -22,7 +22,7 @@ export default async function ExtractionPage({ params }: ExtractionPageProps) {
   }
 
   const profileResult = await getProfileOrRedirect({
-    createClient: async () => supabase as any,
+    createClient: async () => supabase,
   });
 
   if (profileResult.kind === "redirect") {

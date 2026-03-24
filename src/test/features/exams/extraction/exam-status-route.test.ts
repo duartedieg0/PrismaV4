@@ -116,7 +116,8 @@ describe("exam status route", () => {
     });
 
     expect(response.status).toBe(200);
-    await expect(response.json()).resolves.toEqual({
+    const body = await response.json();
+    expect(body.data).toEqual({
       status: "analyzing",
       errorMessage: null,
       progress: {

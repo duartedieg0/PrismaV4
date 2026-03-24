@@ -24,7 +24,8 @@ export default function AdminAgentsPage() {
         throw new Error("Não foi possível carregar agentes.");
       }
 
-      setAgents(await response.json() as AdminAgentView[]);
+      const body = await response.json();
+      setAgents(body.data as AdminAgentView[]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar agentes.");
     } finally {
@@ -41,8 +42,8 @@ export default function AdminAgentsPage() {
       const response = await fetch(`/api/admin/agents/${agentId}`, { method: "DELETE" });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Não foi possível excluir o agente.");
+        const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+        throw new Error(payload?.error?.message ?? "Não foi possível excluir o agente.");
       }
 
       toast.success("Agente excluído com sucesso.");

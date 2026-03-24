@@ -119,13 +119,13 @@ export function NewExamForm({
       const payload = await response.json();
 
       if (!response.ok) {
-        throw new Error(payload.error ?? "Erro ao enviar a prova.");
+        throw new Error(payload.error?.message ?? "Erro ao enviar a prova.");
       }
 
       toast.success("Prova enviada para adaptação.");
       startTransition(() => {
         router.refresh();
-        router.push(`/exams/${payload.examId}/processing`);
+        router.push(`/exams/${payload.data.examId}/processing`);
       });
     } catch (submissionError) {
       toast.error(

@@ -6,7 +6,7 @@ import type { AdminRouteAccess } from "@/features/admin/shared/contracts";
 export async function requireAdminPageAccess() {
   const supabase = await createClient();
   const profileResult = await getProfileOrRedirect({
-    createClient: async () => supabase as never,
+    createClient: async () => supabase,
   });
 
   if (profileResult.kind === "redirect") {
@@ -48,7 +48,7 @@ export async function requireAdminRouteAccess(): Promise<AdminRouteAccess> {
   }
 
   const profileResult = await getProfileOrRedirect({
-    createClient: async () => supabase as never,
+    createClient: async () => supabase,
   });
 
   if (profileResult.kind === "redirect") {

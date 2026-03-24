@@ -126,7 +126,7 @@ describe("new exam form", () => {
     const resolveFetchRef: {
       current: null | ((value: {
       ok: boolean;
-      json(): Promise<{ examId: string }>;
+      json(): Promise<{ data: { examId: string } }>;
       }) => void);
     } = {
       current: null,
@@ -172,7 +172,7 @@ describe("new exam form", () => {
       resolveFetchRef.current({
         ok: true,
         json: async () => ({
-          examId: "exam-123",
+          data: { examId: "exam-123" },
         }),
       });
     }

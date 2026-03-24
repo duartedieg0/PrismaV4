@@ -9,6 +9,7 @@ import {
 import { createClient } from "@/gateways/supabase/server";
 import { logError } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
+import { apiError, apiInternalError, apiNotFound, apiSuccess, apiValidationError } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -25,7 +26,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   const parsed = evolveAgentSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const supabase = await createClient();
@@ -36,7 +37,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     .single();
 
   if (agentError || !agent) {
-    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+    return apiNotFound("Agente não encontrado.");
   }
 
   const { data: feedbackRows, error: feedbackError } = await supabase
@@ -63,7 +64,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     .eq("adaptations.supports.agent_id", agentId);
 
   if (feedbackError) {
-    return NextResponse.json({ error: feedbackError.message }, { status: 500 });
+    return apiInternalError(feedbackError.message);
   }
 
   const eligibleFeedbacks = (feedbackRows ?? [])
@@ -90,10 +91,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     .filter((feedback) => !feedback.dismissed);
 
   if (eligibleFeedbacks.length === 0) {
-    return NextResponse.json(
-      { error: "Nenhum feedback elegível foi encontrado para evolução." },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "Nenhum feedback elegível foi encontrado para evolução.", 400);
   }
 
   const { data: models, error: modelError } = await supabase
@@ -101,13 +99,13 @@ export async function POST(request: Request, { params }: RouteContext) {
     .select("id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at");
 
   if (modelError) {
-    return NextResponse.json({ error: modelError.message }, { status: 500 });
+    return apiInternalError(modelError.message);
   }
 
   const evolutionModel = selectEvolutionModel(models ?? []);
 
   if (!evolutionModel) {
-    return NextResponse.json({ error: "Nenhum modelo habilitado foi encontrado para evolução." }, { status: 400 });
+    return apiError("VALIDATION_ERROR", "Nenhum modelo habilitado foi encontrado para evolução.", 400);
   }
 
   try {
@@ -148,15 +146,10 @@ export async function POST(request: Request, { params }: RouteContext) {
       },
     });
 
-    return NextResponse.json(suggestion);
+    return apiSuccess(suggestion);
   } catch (error) {
     logError("Falha ao evoluir agente", createRequestContext(), error);
-    return NextResponse.json(
-      {
-        error: error instanceof Error ? error.message : "Erro ao evoluir agente.",
-      },
-      { status: 500 },
-    );
+    return apiInternalError(error instanceof Error ? error.message : "Erro ao evoluir agente.");
   }
 }
 
@@ -171,7 +164,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = resolveEvolutionSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const supabase = await createClient();
@@ -184,7 +177,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .single();
 
     if (agentError || !agent) {
-      return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+      return apiNotFound("Agente não encontrado.");
     }
 
     const acceptedVersion = agent.version + 1;
@@ -200,7 +193,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .eq("agent_id", agentId);
 
     if (traceError) {
-      return NextResponse.json({ error: traceError.message }, { status: 500 });
+      return apiInternalError(traceError.message);
     }
 
     const { error: updateError } = await supabase
@@ -212,7 +205,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .eq("id", agentId);
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+      return apiInternalError(updateError.message);
     }
   } else {
     const { error: traceError } = await supabase
@@ -225,9 +218,9 @@ export async function PATCH(request: Request, { params }: RouteContext) {
       .eq("agent_id", agentId);
 
     if (traceError) {
-      return NextResponse.json({ error: traceError.message }, { status: 500 });
+      return apiInternalError(traceError.message);
     }
   }
 
-  return NextResponse.json({ success: true });
+  return apiSuccess({ success: true });
 }

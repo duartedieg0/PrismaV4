@@ -41,7 +41,7 @@ async function resolveAuthenticatedUserFromGateway(): Promise<AuthenticatedResul
   }
 
   return getAuthenticatedUser({
-    createClient: async () => createServerClient() as any,
+    createClient: async () => createServerClient(),
   });
 }
 
@@ -56,7 +56,7 @@ async function resolveProfileFromGateway(): Promise<ProfileResult> {
   }
 
   return getProfileOrRedirect({
-    createClient: async () => createServerClient() as any,
+    createClient: async () => createServerClient(),
   });
 }
 

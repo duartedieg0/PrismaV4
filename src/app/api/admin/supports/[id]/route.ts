@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
 import { toAdminSupportView } from "@/features/admin/supports/service";
 import { updateSupportSchema } from "@/features/admin/supports/validation";
 import { createClient } from "@/gateways/supabase/server";
+import { apiConflict, apiError, apiInternalError, apiSuccess, apiValidationError } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -19,7 +19,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = updateSupportSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const supabase = await createClient();
@@ -34,7 +34,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const { data: agent } = await supabase.from("agents").select("id, enabled").eq("id", parsed.data.agentId).single();
 
     if (!agent?.id || !agent.enabled) {
-      return NextResponse.json({ error: "Selecione um agente habilitado." }, { status: 400 });
+      return apiError("VALIDATION_ERROR", "Selecione um agente habilitado.", 400);
     }
   }
 
@@ -42,7 +42,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     const { data: model } = await supabase.from("ai_models").select("id, enabled").eq("id", parsed.data.modelId).single();
 
     if (!model?.id || !model.enabled) {
-      return NextResponse.json({ error: "Selecione um modelo habilitado." }, { status: 400 });
+      return apiError("VALIDATION_ERROR", "Selecione um modelo habilitado.", 400);
     }
   }
 
@@ -54,10 +54,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(toAdminSupportView(data as never));
+  return apiSuccess(toAdminSupportView(data));
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
@@ -75,17 +75,14 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     .eq("support_id", id);
 
   if ((count ?? 0) > 0) {
-    return NextResponse.json(
-      { error: "Apoios usados em provas devem ser desabilitados, não excluídos." },
-      { status: 409 },
-    );
+    return apiConflict("Apoios usados em provas devem ser desabilitados, não excluídos.");
   }
 
   const { error } = await supabase.from("supports").delete().eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json({ success: true });
+  return apiSuccess({ success: true });
 }

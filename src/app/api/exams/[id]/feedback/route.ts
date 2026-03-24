@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/gateways/supabase/server";
+import { apiForbidden, apiInternalError, apiSuccess, apiUnauthorized, apiValidationError } from "@/services/errors/api-response";
 
 const saveFeedbackSchema = z.object({
   adaptationId: z.string().uuid("ID da adaptação inválido."),
@@ -29,7 +30,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const { data: exam, error: examError } = await supabase
@@ -39,17 +40,14 @@ export async function POST(request: Request, { params }: RouteContext) {
     .single();
 
   if (examError || !exam || exam.user_id !== user.id) {
-    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+    return apiForbidden();
   }
 
   const body = await request.json();
   const parsed = saveFeedbackSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten().fieldErrors },
-      { status: 400 },
-    );
+    return apiValidationError(parsed.error);
   }
 
   const { data: existingFeedback } = await supabase
@@ -70,10 +68,10 @@ export async function POST(request: Request, { params }: RouteContext) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiInternalError(error.message);
     }
 
-    return NextResponse.json(data);
+    return apiSuccess(data);
   }
 
   const { data, error } = await supabase
@@ -87,8 +85,8 @@ export async function POST(request: Request, { params }: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(data, { status: 201 });
+  return apiSuccess(data, 201);
 }

@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
 import { toEnabledNameEntity } from "@/features/admin/curriculum/service";
 import { updateEnabledEntitySchema } from "@/features/admin/curriculum/validation";
 import { createClient } from "@/gateways/supabase/server";
+import { apiSuccess, apiValidationError, apiInternalError, apiConflict } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -18,7 +18,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = updateEnabledEntitySchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const { id } = await params;
@@ -31,10 +31,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(toEnabledNameEntity(data));
+  return apiSuccess(toEnabledNameEntity(data));
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
@@ -52,17 +52,14 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     .eq("subject_id", id);
 
   if ((count ?? 0) > 0) {
-    return NextResponse.json(
-      { error: "Disciplinas já usadas em provas devem ser desabilitadas, não excluídas." },
-      { status: 409 },
-    );
+    return apiConflict("Disciplinas já usadas em provas devem ser desabilitadas, não excluídas.");
   }
 
   const { error } = await supabase.from("subjects").delete().eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json({ success: true });
+  return apiSuccess({ success: true });
 }

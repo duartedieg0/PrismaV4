@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@/gateways/supabase/server";
+import { apiForbidden, apiNotFound, apiSuccess, apiUnauthorized } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{
@@ -15,7 +15,7 @@ export async function GET(_: Request, { params }: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const { data: exam, error: examError } = await supabase
@@ -25,11 +25,11 @@ export async function GET(_: Request, { params }: RouteContext) {
     .single();
 
   if (examError || !exam) {
-    return NextResponse.json({ error: "Exame não encontrado." }, { status: 404 });
+    return apiNotFound("Exame não encontrado.");
   }
 
   if (exam.user_id !== user.id) {
-    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+    return apiForbidden();
   }
 
   const { data: questions } = await supabase
@@ -39,30 +39,32 @@ export async function GET(_: Request, { params }: RouteContext) {
 
   const questionIds = (questions ?? []).map((question) => question.id);
 
-  let totalAdaptations = 0;
-  let completedAdaptations = 0;
+  if (questionIds.length === 0) {
+    return apiSuccess({
+      status: exam.status,
+      errorMessage: exam.error_message,
+      progress: { total: 0, completed: 0, questionsCount: 0 },
+    });
+  }
 
-  if (questionIds.length > 0) {
-    const { count: total } = await supabase
+  const [{ count: total }, { count: completed }] = await Promise.all([
+    supabase
       .from("adaptations")
       .select("*", { count: "exact", head: true })
-      .in("question_id", questionIds);
-    const { count: completed } = await supabase
+      .in("question_id", questionIds),
+    supabase
       .from("adaptations")
       .select("*", { count: "exact", head: true })
       .in("question_id", questionIds)
-      .eq("status", "completed");
+      .eq("status", "completed"),
+  ]);
 
-    totalAdaptations = total ?? 0;
-    completedAdaptations = completed ?? 0;
-  }
-
-  return NextResponse.json({
+  return apiSuccess({
     status: exam.status,
     errorMessage: exam.error_message,
     progress: {
-      total: totalAdaptations,
-      completed: completedAdaptations,
+      total: total ?? 0,
+      completed: completed ?? 0,
       questionsCount: questionIds.length,
     },
   });

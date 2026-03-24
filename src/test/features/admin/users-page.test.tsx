@@ -8,13 +8,15 @@ describe("users table", () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        id: "user-1",
-        fullName: "Professor Um",
-        email: "prof@example.com",
-        avatarUrl: null,
-        role: "teacher",
-        blocked: true,
-        createdAt: "2026-03-21T00:00:00.000Z",
+        data: {
+          id: "user-1",
+          fullName: "Professor Um",
+          email: "prof@example.com",
+          avatarUrl: null,
+          role: "teacher",
+          blocked: true,
+          createdAt: "2026-03-21T00:00:00.000Z",
+        },
       }),
     });
 

@@ -14,7 +14,7 @@ export default async function ProcessingPage({ params }: ProcessingPageProps) {
   const { id: examId } = await params;
   const supabase = await createClient();
   const profileResult = await getProfileOrRedirect({
-    createClient: async () => supabase as any,
+    createClient: async () => supabase,
   });
 
   if (profileResult.kind === "redirect") {

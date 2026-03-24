@@ -35,8 +35,8 @@ export function EntityManager({
         throw new Error(`Não foi possível carregar ${pluralLabel.toLowerCase()}.`);
       }
 
-      const nextItems = await response.json() as EnabledNameEntity[];
-      setItems(nextItems);
+      const body = await response.json();
+      setItems(body.data as EnabledNameEntity[]);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao carregar catálogo.");
     } finally {

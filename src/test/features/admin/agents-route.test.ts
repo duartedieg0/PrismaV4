@@ -86,7 +86,7 @@ describe("agents routes", () => {
       error: null,
     });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/admin/agents"));
     expect(response.status).toBe(200);
   });
 

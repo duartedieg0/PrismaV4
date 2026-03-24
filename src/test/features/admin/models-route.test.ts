@@ -87,9 +87,10 @@ describe("models routes", () => {
       error: null,
     });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/admin/models"));
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual([
+    const body = await response.json();
+    expect(body.data).toEqual([
       expect.objectContaining({
         apiKeyMasked: "sec...3456",
       }),

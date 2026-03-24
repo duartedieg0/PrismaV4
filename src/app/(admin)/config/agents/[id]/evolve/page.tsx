@@ -38,7 +38,8 @@ export default function EvolveAgentPage() {
           throw new Error("Não foi possível carregar o agente.");
         }
 
-        setAgent(await response.json() as AdminAgentView);
+        const body = await response.json();
+        setAgent(body.data as AdminAgentView);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao carregar agente.");
       } finally {
@@ -58,11 +59,12 @@ export default function EvolveAgentPage() {
       });
 
       if (!response.ok) {
-        const payload = await response.json().catch(() => null) as { error?: string } | null;
-        throw new Error(payload?.error ?? "Não foi possível evoluir o agente.");
+        const payload = await response.json().catch(() => null) as { error?: { message?: string } } | null;
+        throw new Error(payload?.error?.message ?? "Não foi possível evoluir o agente.");
       }
 
-      setSuggestion(await response.json() as EvolutionSuggestion);
+      const suggestionBody = await response.json();
+      setSuggestion(suggestionBody.data as EvolutionSuggestion);
       toast.success("Sugestão de evolução gerada com sucesso.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Erro ao evoluir agente.");

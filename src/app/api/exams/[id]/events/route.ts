@@ -4,6 +4,7 @@ import { recordResultEvent } from "@/features/exams/results/record-result-event"
 import { createClient } from "@/gateways/supabase/server";
 import { logInfo } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
+import { apiForbidden, apiSuccess, apiUnauthorized, apiValidationError } from "@/services/errors/api-response";
 
 const resultEventSchema = z.object({
   type: z.enum([
@@ -34,7 +35,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const { data: exam, error: examError } = await supabase
@@ -44,17 +45,14 @@ export async function POST(request: Request, { params }: RouteContext) {
     .single();
 
   if (examError || !exam || exam.user_id !== user.id) {
-    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+    return apiForbidden();
   }
 
   const body = await request.json();
   const parsed = resultEventSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten().fieldErrors },
-      { status: 400 },
-    );
+    return apiValidationError(parsed.error);
   }
 
   await recordResultEvent(
@@ -69,5 +67,5 @@ export async function POST(request: Request, { params }: RouteContext) {
     },
   );
 
-  return NextResponse.json({ accepted: true }, { status: 202 });
+  return apiSuccess({ accepted: true }, 202);
 }

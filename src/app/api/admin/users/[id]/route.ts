@@ -11,6 +11,7 @@ import { updateAdminUserSchema } from "@/features/admin/users/validation";
 import { createClient } from "@/gateways/supabase/server";
 import { logWarn } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
+import { apiForbidden, apiInternalError, apiNotFound, apiSuccess, apiValidationError } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -27,7 +28,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = updateAdminUserSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const supabase = await createClient();
@@ -38,7 +39,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (targetError || !targetUser) {
-    return NextResponse.json({ error: "Usuário não encontrado." }, { status: 404 });
+    return apiNotFound("Usuário não encontrado.");
   }
 
   const nextTarget = {
@@ -64,10 +65,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     });
   } catch (error) {
     logWarn("Ação de governança bloqueada", createRequestContext());
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Ação não permitida." },
-      { status: 403 },
-    );
+    return apiForbidden(error instanceof Error ? error.message : "Ação não permitida.");
   }
 
   const action = determineGovernanceAction({
@@ -79,7 +77,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   });
 
   if (!action) {
-    return NextResponse.json(toAdminUserListItem(targetUser));
+    return apiSuccess(toAdminUserListItem(targetUser));
   }
 
   const { data: updatedUser, error: updateError } = await supabase
@@ -90,7 +88,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (updateError || !updatedUser) {
-    return NextResponse.json({ error: updateError?.message ?? "Erro ao atualizar usuário." }, { status: 500 });
+    return apiInternalError(updateError?.message ?? "Erro ao atualizar usuário.");
   }
 
   const { data: auditRow, error: auditError } = await supabase
@@ -112,10 +110,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (auditError || !auditRow) {
-    return NextResponse.json({ error: auditError?.message ?? "Erro ao registrar auditoria." }, { status: 500 });
+    return apiInternalError(auditError?.message ?? "Erro ao registrar auditoria.");
   }
 
   toAuditEntry(auditRow);
 
-  return NextResponse.json(toAdminUserListItem(updatedUser));
+  return apiSuccess(toAdminUserListItem(updatedUser));
 }

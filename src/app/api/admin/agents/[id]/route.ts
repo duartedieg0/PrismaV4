@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
 import { buildAgentPatch, toAdminAgentView } from "@/features/admin/agents/service";
 import { updateAgentSchema } from "@/features/admin/agents/validation";
 import { createClient } from "@/gateways/supabase/server";
+import { apiConflict, apiInternalError, apiNotFound, apiSuccess, apiValidationError } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -24,10 +24,10 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "Agente não encontrado." }, { status: 404 });
+    return apiNotFound("Agente não encontrado.");
   }
 
-  return NextResponse.json(toAdminAgentView(data));
+  return apiSuccess(toAdminAgentView(data));
 }
 
 export async function PATCH(request: Request, { params }: RouteContext) {
@@ -41,7 +41,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const parsed = updateAgentSchema.safeParse(await request.json());
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
+    return apiValidationError(parsed.error);
   }
 
   const supabase = await createClient();
@@ -53,10 +53,10 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json(toAdminAgentView(data));
+  return apiSuccess(toAdminAgentView(data));
 }
 
 export async function DELETE(_request: Request, { params }: RouteContext) {
@@ -74,17 +74,14 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
     .eq("agent_id", id);
 
   if ((count ?? 0) > 0) {
-    return NextResponse.json(
-      { error: "Remova ou reconfigure os apoios vinculados antes de excluir o agente." },
-      { status: 409 },
-    );
+    return apiConflict("Remova ou reconfigure os apoios vinculados antes de excluir o agente.");
   }
 
   const { error } = await supabase.from("agents").delete().eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
-  return NextResponse.json({ success: true });
+  return apiSuccess({ success: true });
 }

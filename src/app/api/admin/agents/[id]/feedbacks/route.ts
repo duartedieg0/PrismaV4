@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { requireAdminRouteAccess } from "@/features/admin/shared/admin-guard";
 import { createClient } from "@/gateways/supabase/server";
+import { apiInternalError, apiSuccess } from "@/services/errors/api-response";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
@@ -40,7 +40,7 @@ export async function GET(_request: Request, { params }: RouteContext) {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return apiInternalError(error.message);
   }
 
   const { data: evolutions } = await supabase
@@ -82,5 +82,5 @@ export async function GET(_request: Request, { params }: RouteContext) {
     };
   });
 
-  return NextResponse.json(feedbacks);
+  return apiSuccess(feedbacks);
 }

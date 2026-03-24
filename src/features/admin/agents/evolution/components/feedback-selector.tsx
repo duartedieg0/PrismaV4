@@ -34,8 +34,8 @@ export function FeedbackSelector({
           throw new Error("Não foi possível carregar feedbacks elegíveis.");
         }
 
-        const nextFeedbacks = await response.json() as EvolutionFeedbackView[];
-        setFeedbacks(nextFeedbacks);
+        const body = await response.json();
+        setFeedbacks(body.data as EvolutionFeedbackView[]);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Erro ao carregar feedbacks.");
       } finally {

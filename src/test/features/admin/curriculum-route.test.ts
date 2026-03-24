@@ -58,7 +58,7 @@ describe("subjects routes", () => {
       error: null,
     });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/admin/curriculum"));
     expect(response.status).toBe(200);
   });
 

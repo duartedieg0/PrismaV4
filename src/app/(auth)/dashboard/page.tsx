@@ -26,7 +26,7 @@ export default async function DashboardPage(_: StaticPageProps) {
   }
 
   const profileResult = await getProfileOrRedirect({
-    createClient: async () => supabase as any,
+    createClient: async () => supabase,
   });
 
   if (profileResult.kind === "redirect") {
@@ -35,6 +35,7 @@ export default async function DashboardPage(_: StaticPageProps) {
 
   const exams = await listTeacherExams({
     teacherId: profileResult.profile.id,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     createClient: async () => supabase as any,
   });
 

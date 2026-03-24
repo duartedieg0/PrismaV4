@@ -9,6 +9,7 @@ import {
 } from "@/mastra/agents/analysis-agent-runners";
 import { logError } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
+import { apiError, apiForbidden, apiNotFound, apiSuccess, apiUnauthorized, apiValidationError } from "@/services/errors/api-response";
 
 export const maxDuration = 300;
 
@@ -71,7 +72,7 @@ export async function POST(request: Request, { params }: RouteContext) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+    return apiUnauthorized();
   }
 
   const { data: exam, error: examError } = await supabase
@@ -81,28 +82,22 @@ export async function POST(request: Request, { params }: RouteContext) {
     .single();
 
   if (examError || !exam) {
-    return NextResponse.json({ error: "Exame não encontrado." }, { status: 404 });
+    return apiNotFound("Exame não encontrado.");
   }
 
   if (exam.user_id !== user.id) {
-    return NextResponse.json({ error: "Acesso negado." }, { status: 403 });
+    return apiForbidden();
   }
 
   if (exam.status !== "awaiting_answers") {
-    return NextResponse.json(
-      { error: "Este exame não está aguardando respostas." },
-      { status: 400 },
-    );
+    return apiError("VALIDATION_ERROR", "Este exame não está aguardando respostas.", 400);
   }
 
   const body = await request.json();
   const parsed = submitAnswersSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: parsed.error.flatten().fieldErrors },
-      { status: 400 },
-    );
+    return apiValidationError(parsed.error);
   }
 
   for (const answer of parsed.data.answers) {
@@ -254,5 +249,5 @@ export async function POST(request: Request, { params }: RouteContext) {
     }
   });
 
-  return NextResponse.json({ accepted: true }, { status: 202 });
+  return apiSuccess({ accepted: true }, 202);
 }

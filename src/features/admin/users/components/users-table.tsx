@@ -54,17 +54,17 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
         body: JSON.stringify(payload),
       });
 
-      const result = await response.json().catch(() => null) as AdminUserListItem | { error?: string } | null;
+      const body = await response.json().catch(() => null) as { data?: AdminUserListItem; error?: { message?: string } } | null;
 
-      if (!response.ok || !result) {
-        throw new Error("Erro ao atualizar usuário.");
+      if (!response.ok || !body) {
+        throw new Error(body?.error?.message ?? "Erro ao atualizar usuário.");
       }
 
-      if ("error" in result) {
-        throw new Error(result.error ?? "Erro ao atualizar usuário.");
+      if (body.error) {
+        throw new Error(body.error.message ?? "Erro ao atualizar usuário.");
       }
 
-      const updatedUser = result as AdminUserListItem;
+      const updatedUser = body.data as AdminUserListItem;
 
       setUsers((current) => current.map((user) => (user.id === updatedUser.id ? updatedUser : user)));
       toast.success("Usuário atualizado com sucesso.");

@@ -77,7 +77,7 @@ export async function exchangeCodeAndResolveRedirect(requestUrl: string) {
   }
 
   const profileResult = await getProfileOrRedirect({
-    createClient: async () => supabase as any,
+    createClient: async () => supabase,
   });
 
   if (profileResult.kind === "redirect") {

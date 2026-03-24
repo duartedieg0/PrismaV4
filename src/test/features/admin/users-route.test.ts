@@ -87,7 +87,7 @@ describe("admin users routes", () => {
       error: null,
     });
 
-    const response = await GET();
+    const response = await GET(new Request("http://localhost/api/admin/users"));
     expect(response.status).toBe(200);
   });
 
