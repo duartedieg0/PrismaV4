@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { Copy, Check, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/design-system/components/button";
 
 type CopyActionBarProps = {
@@ -40,19 +42,45 @@ export function CopyActionBar({
       });
 
       setStatus("copied");
+      setTimeout(() => setStatus("idle"), 2500);
     } catch {
       setStatus("error");
+      setTimeout(() => setStatus("idle"), 3000);
     }
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <Button onClick={handleCopy} type="button" variant="outline" size="sm">
-        Copiar adaptação
+    <div className="flex items-center gap-3 rounded-xl border border-border-default bg-surface-muted/50 px-4 py-3">
+      <Button
+        onClick={handleCopy}
+        type="button"
+        variant={status === "copied" ? "primary" : "outline"}
+        size="sm"
+        className={cn(
+          "transition-all duration-200",
+          status === "copied" && "bg-brand-600",
+        )}
+      >
+        {status === "copied" ? (
+          <Check className="h-3.5 w-3.5" />
+        ) : status === "error" ? (
+          <AlertCircle className="h-3.5 w-3.5" />
+        ) : (
+          <Copy className="h-3.5 w-3.5" />
+        )}
+        {status === "copied" ? "Copiado!" : status === "error" ? "Erro" : "Copiar adaptação"}
       </Button>
-      <span aria-live="polite" className="text-xs text-text-secondary">
-        {status === "copied" ? "Conteúdo copiado." : null}
-        {status === "error" ? "Não foi possível copiar agora." : null}
+
+      <span
+        aria-live="polite"
+        className={cn(
+          "text-xs transition-opacity duration-200",
+          status === "idle" ? "opacity-0" : "opacity-100",
+          status === "copied" ? "text-brand-600" : "text-danger",
+        )}
+      >
+        {status === "copied" ? "Conteúdo copiado para a área de transferência." : null}
+        {status === "error" ? "Não foi possível copiar. Tente novamente." : null}
       </span>
     </div>
   );

@@ -1,3 +1,10 @@
+import {
+  AlertCircle,
+  Sparkles,
+  BookOpen,
+  BrainCircuit,
+} from "lucide-react";
+import { Badge } from "@/design-system/components/badge";
 import { CopyActionBar } from "@/features/exams/results/components/copy-action-bar";
 import { FeedbackForm } from "@/features/exams/results/components/feedback-form";
 import type { AdaptationResultView } from "@/features/exams/results/contracts";
@@ -14,35 +21,117 @@ export function AdaptationResultCard({
   onCopy,
 }: AdaptationResultCardProps) {
   if (adaptation.status === "error") {
-    return <p className="text-sm text-red-600">Erro ao adaptar a questão.</p>;
+    return (
+      <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
+        <AlertCircle className="h-5 w-5 shrink-0 text-danger" />
+        <div>
+          <p className="text-sm font-medium text-danger">Erro ao adaptar</p>
+          <p className="text-xs text-red-600/80">
+            Não foi possível gerar a adaptação para este apoio. Tente novamente mais tarde.
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!adaptation.adaptedContent) {
-    return <p className="text-sm text-text-secondary">Adaptação não disponível.</p>;
+    return (
+      <p className="text-sm text-text-muted">Adaptação não disponível para este apoio.</p>
+    );
   }
 
   return (
-    <article className="flex flex-col gap-4 rounded-xl border border-border-default bg-surface-muted/50 p-4">
-      <div className="flex flex-col gap-1">
-        <h4 className="text-sm font-semibold text-text-primary">{adaptation.supportName}</h4>
-        <p className="text-sm text-text-primary">{adaptation.adaptedContent}</p>
+    <div className="flex flex-col gap-5">
+      {/* ── Adapted Content ── */}
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-brand-500" />
+          <h4 className="text-sm font-semibold text-text-primary">
+            Conteúdo adaptado
+          </h4>
+        </div>
+
+        <div className="rounded-xl bg-brand-50/50 p-4 ring-1 ring-brand-200/50">
+          <p className="text-sm leading-relaxed text-text-primary">
+            {adaptation.adaptedContent}
+          </p>
+
+          {/* Adapted Alternatives */}
+          {adaptation.adaptedAlternatives && adaptation.adaptedAlternatives.length > 0 ? (
+            <ul className="mt-4 flex flex-col gap-2">
+              {[...adaptation.adaptedAlternatives]
+                .sort((a, b) => a.position - b.position)
+                .map((alt, index) => {
+                  const label = String.fromCharCode(97 + index);
+                  return (
+                    <li
+                      key={alt.id}
+                      className={
+                        "flex items-start gap-2 rounded-lg p-2 text-sm " +
+                        (alt.isCorrect
+                          ? "bg-emerald-100/60 ring-1 ring-emerald-300/50"
+                          : "bg-white/60")
+                      }
+                    >
+                      <span
+                        className={
+                          "flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-xs font-bold " +
+                          (alt.isCorrect
+                            ? "bg-emerald-600 text-white"
+                            : "bg-stone-200 text-text-secondary")
+                        }
+                      >
+                        {label}
+                      </span>
+                      <span className="text-text-primary">{alt.adaptedText}</span>
+                    </li>
+                  );
+                })}
+            </ul>
+          ) : null}
+        </div>
       </div>
 
+      {/* ── Pedagogical Tags ── */}
       {(adaptation.bnccSkills?.length || adaptation.bloomLevel) ? (
-        <div className="flex flex-wrap gap-2">
-          {adaptation.bnccSkills?.length ? (
-            <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-700">
-              {adaptation.bnccSkills.join(", ")}
-            </span>
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted">
+            Análise pedagógica
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {adaptation.bnccSkills?.map((skill) => (
+              <Badge key={skill} variant="default" size="sm">
+                <span className="flex items-center gap-1">
+                  <BookOpen className="h-3 w-3" />
+                  {skill}
+                </span>
+              </Badge>
+            ))}
+            {adaptation.bloomLevel ? (
+              <Badge variant="success" size="sm">
+                <span className="flex items-center gap-1">
+                  <BrainCircuit className="h-3 w-3" />
+                  {adaptation.bloomLevel}
+                </span>
+              </Badge>
+            ) : null}
+          </div>
+
+          {/* Analysis tooltips */}
+          {adaptation.bnccAnalysis ? (
+            <p className="text-xs leading-relaxed text-text-muted">
+              {adaptation.bnccAnalysis}
+            </p>
           ) : null}
-          {adaptation.bloomLevel ? (
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-              {adaptation.bloomLevel}
-            </span>
+          {adaptation.bloomAnalysis ? (
+            <p className="text-xs leading-relaxed text-text-muted">
+              {adaptation.bloomAnalysis}
+            </p>
           ) : null}
         </div>
       ) : null}
 
+      {/* ── Copy Bar ── */}
       {adaptation.copyBlock ? (
         <CopyActionBar
           adaptationId={adaptation.adaptationId}
@@ -53,11 +142,12 @@ export function AdaptationResultCard({
         />
       ) : null}
 
+      {/* ── Feedback ── */}
       <FeedbackForm
         adaptationId={adaptation.adaptationId}
         examId={examId}
         existingFeedback={adaptation.feedback}
       />
-    </article>
+    </div>
   );
 }
