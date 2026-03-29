@@ -1,28 +1,23 @@
-import { StatCard } from "@/design-system/components/stat-card";
-import { Users, FileCheck, Clock } from "lucide-react";
+const stats = [
+  { value: "+2.500", label: "Professores ativos" },
+  { value: "15.000+", label: "Provas adaptadas" },
+  { value: "85%", label: "Tempo economizado" },
+];
 
 export function TrustStrip() {
   return (
-    <section className="border-y border-border-default bg-surface-muted/50 py-12">
-      <div className="container-page grid gap-4 sm:grid-cols-3">
-        <StatCard
-          label="Professores"
-          value="+2.500"
-          trend="ativos na plataforma"
-          icon={<Users className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Provas adaptadas"
-          value="15.000+"
-          trend="e crescendo"
-          icon={<FileCheck className="h-5 w-5" />}
-        />
-        <StatCard
-          label="Tempo economizado"
-          value="85%"
-          trend="em média por prova"
-          icon={<Clock className="h-5 w-5" />}
-        />
+    <section className="bg-surface-muted py-10">
+      <div className="container-page">
+        <div className="flex flex-col items-center gap-8 sm:flex-row sm:justify-center sm:divide-x sm:divide-border-default sm:gap-0">
+          {stats.map((stat) => (
+            <div key={stat.label} className="flex flex-col items-center gap-1 sm:px-12">
+              <span className="text-4xl font-bold tracking-tight text-brand-600">
+                {stat.value}
+              </span>
+              <span className="text-sm text-text-secondary">{stat.label}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
