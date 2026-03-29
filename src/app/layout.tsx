@@ -1,16 +1,22 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Literata, Source_Sans_3 } from "next/font/google";
+import localFont from "next/font/local";
+import { IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "@/app/providers";
 import "@/app/globals.css";
 
-const editorialSerif = Literata({
-  subsets: ["latin"],
-  variable: "--font-editorial",
-});
-
-const interfaceSans = Source_Sans_3({
-  subsets: ["latin"],
-  variable: "--font-interface",
+const satoshi = localFont({
+  src: [
+    {
+      path: "../../public/fonts/satoshi/Satoshi-Variable.woff2",
+      style: "normal",
+    },
+    {
+      path: "../../public/fonts/satoshi/Satoshi-VariableItalic.woff2",
+      style: "italic",
+    },
+  ],
+  variable: "--font-satoshi",
+  display: "swap",
 });
 
 const interfaceMono = IBM_Plex_Mono({
@@ -33,7 +39,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="pt-BR"
-      className={`${editorialSerif.variable} ${interfaceSans.variable} ${interfaceMono.variable}`}
+      className={`${satoshi.variable} ${interfaceMono.variable}`}
     >
       <body>
         <Providers>{children}</Providers>
