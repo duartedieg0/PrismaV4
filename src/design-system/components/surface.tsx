@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type SurfaceVariant = "default" | "muted" | "raised" | "glass" | "terminal";
+type SurfaceVariant = "default" | "muted" | "raised" | "dark";
 
 type NamedPadding = "none" | "sm" | "md" | "lg";
 
@@ -16,8 +16,7 @@ const variantClasses: Record<SurfaceVariant, string> = {
   default: "bg-surface border-border-default shadow-card",
   muted: "bg-surface-muted border-border-muted",
   raised: "bg-surface-raised border-border-default shadow-elevated",
-  glass: "bg-glass border-white/20 shadow-card",
-  terminal: "bg-surface-terminal border-slate-700/50 text-text-inverse shadow-glow",
+  dark: "bg-surface-dark border-brand-800 text-text-inverse",
 };
 
 const paddingMap: Record<NamedPadding, string> = {

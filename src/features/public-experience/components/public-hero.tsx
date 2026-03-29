@@ -20,7 +20,7 @@ export function PublicHero() {
       <div className="container-page relative grid gap-12 py-20 lg:grid-cols-2 lg:items-center lg:gap-16 lg:py-28">
         {/* Left: Copy */}
         <div className="flex flex-col gap-6">
-          <Badge variant="terminal" size="md">Plataforma educacional com IA</Badge>
+          <Badge variant="accent" size="md">Plataforma educacional com IA</Badge>
           <h1 className="font-display text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
             Adapte avaliações em{" "}
             <span className="text-brand-400 text-glow">minutos</span>

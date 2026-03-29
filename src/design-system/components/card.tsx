@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type CardVariant = "default" | "muted" | "outlined" | "terminal" | "glass";
+type CardVariant = "default" | "muted" | "outlined";
 
 type CardProps = Readonly<{
   variant?: CardVariant;
@@ -14,8 +14,6 @@ const variantClasses: Record<CardVariant, string> = {
   default: "bg-surface border-border-default shadow-card",
   muted: "bg-surface-muted border-border-muted",
   outlined: "bg-transparent border-border-strong",
-  terminal: "bg-surface-terminal border-slate-700/50 text-text-inverse shadow-glow",
-  glass: "bg-glass border-white/20 shadow-card",
 };
 
 const paddingClasses: Record<string, string> = {

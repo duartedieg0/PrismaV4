@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "outline" | "terminal";
+type BadgeVariant = "default" | "success" | "warning" | "danger" | "info" | "outline" | "accent";
 
 type BadgeProps = Readonly<{
   variant?: BadgeVariant;
@@ -14,9 +14,9 @@ const variantClasses: Record<BadgeVariant, string> = {
   success: "bg-emerald-100 text-emerald-800 border-emerald-200",
   warning: "bg-amber-100 text-amber-800 border-amber-200",
   danger: "bg-red-100 text-red-800 border-red-200",
-  info: "bg-blue-100 text-blue-800 border-blue-200",
+  info: "bg-brand-100 text-brand-700 border-brand-200",
   outline: "bg-transparent text-text-secondary border-border-strong",
-  terminal: "bg-brand-950 text-brand-300 border-brand-800",
+  accent: "bg-accent-50 text-accent-700 border-accent-200",
 };
 
 const sizeClasses = {
