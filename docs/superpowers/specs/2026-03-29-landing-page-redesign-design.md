@@ -183,7 +183,7 @@
 - Icone: Lucide 28px em container 48px (fundo brand-50, radius-lg), icone brand-600
 - Titulo: Satoshi 600, base, text-primary
 - Descricao: Satoshi 400, sm, text-secondary
-- Primeiro card (economia de tempo): borda esquerda 3px accent-500 (#C2703E) -- unico uso de terracota na pagina
+- Primeiro card (economia de tempo): borda esquerda 3px accent-500 (#C2703E) -- unico card com acento terracota
 - Padding vertical 80px
 
 ### 3.6 Testimonials
@@ -231,7 +231,7 @@
 
 | Componente | Mudancas |
 |------------|----------|
-| **Button** | Variantes primary (indigo-600), secondary (indigo-50/indigo-600), outline (borda indigo-200), ghost (hover indigo-50), danger (mantido). Nova variante `accent` (terracota-500). |
+| **Button** | Variantes primary (indigo-600), secondary (indigo-50/indigo-600), outline (borda indigo-200), ghost (hover indigo-50), danger (mantido). Nova variante `accent` (accent-500). |
 | **Card** | Remover variantes `terminal` e `glass`. Manter default, muted, outlined. Atualizar cores. |
 | **Badge** | Remover variante `terminal`. Atualizar cores. Nova variante `accent` (fundo accent-50, texto accent-700). |
 | **Logo** | Atualizar cores para indigo. Nova variante `mono` (branca para fundos escuros). |
@@ -252,9 +252,9 @@ Se usados em paginas internas, migrar para componente de code block simples.
 
 ### 4.4 Tokens e Fontes
 
-- **globals.css:** Substituir paleta emerald/amber por indigo/terracota. Remover tokens de terminal (surface-terminal, text-terminal, terminal-blink, pulse-glow, text-glow).
-- **tokens.ts:** Sincronizar com globals.css.
-- **layout.tsx:** Substituir Literata + Source Sans 3 por Satoshi. Manter IBM Plex Mono.
+- **globals.css:** Substituir paleta emerald/amber por indigo/terracota. Remover todos os tokens de terminal e efeitos associados: `surface-terminal`, `surface-terminal-soft`, `text-terminal`, `terminal-blink`, `pulse-glow`, `text-glow`, `shadow-glow`, `shadow-glow-strong`, `bg-glass`, `bg-glass-dark`. Remover `radius-xs` e `radius-3xl` (nao usados no novo design). Valores de sombra listados neste spec sao intencionalmente diferentes dos atuais (mais sutis para a estetica institucional).
+- **tokens.ts:** Sincronizar completamente com globals.css. Tokens nao listados neste spec devem ser removidos.
+- **layout.tsx:** Substituir Literata + Source Sans 3 por Satoshi. Satoshi e uma fonte custom (nao disponivel via next/font/google). Carregar via self-hosted: baixar os arquivos .woff2 do Fontshare, colocar em `/public/fonts/satoshi/`, e registrar via `next/font/local` no layout.tsx com subsets latin. Manter IBM Plex Mono via next/font/google.
 
 ---
 
@@ -265,7 +265,7 @@ Se usados em paginas internas, migrar para componente de code block simples.
 | Cor principal | Indigo (#4F46E5) | Sabedoria, confianca, autoridade academica |
 | Cor de acento | Terracota (#C2703E) | Organico, humano, diferenciador |
 | Tipografia | Satoshi (unica familia) | Moderna, design-forward, personalidade marcante |
-| Estrutura | Manter 7 secoes atuais | Pragmatico, foco no visual |
+| Estrutura | Manter 7 secoes atuais (PublicFaq atual e renomeado para Testimonials -- mesmo componente, novo visual) | Pragmatico, foco no visual |
 | Hero visual | Screenshot real + BrowserFrame | Mostra o produto real, gera confianca |
 | Estetica terminal | Removida completamente | Nao ressoa com publico educador |
 | Uso de terracota | Restrito (borda do 1o benefit card + CTA do FinalCTA) | Impacto maximo por escassez |
