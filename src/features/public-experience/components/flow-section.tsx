@@ -1,59 +1,55 @@
-import { Card } from "@/design-system/components/card";
-import { Badge } from "@/design-system/components/badge";
 import { Upload, Cpu, ClipboardCheck } from "lucide-react";
 
 const steps = [
   {
-    number: "01",
+    number: "1",
     icon: Upload,
     title: "Envie sua prova",
-    description:
-      "Faça upload do PDF da avaliação e selecione as necessidades educacionais dos seus alunos. O sistema aceita qualquer formato de prova.",
+    description: "Faça upload do PDF da avaliação e selecione as necessidades educacionais dos seus alunos.",
   },
   {
-    number: "02",
+    number: "2",
     icon: Cpu,
     title: "IA adapta as questões",
-    description:
-      "Nossa inteligência artificial analisa cada questão e gera versões adaptadas para TDAH, Dislexia, TEA e outras necessidades — preservando os objetivos pedagógicos.",
+    description: "A inteligência artificial analisa cada questão e gera versões adaptadas preservando os objetivos pedagógicos.",
   },
   {
-    number: "03",
+    number: "3",
     icon: ClipboardCheck,
     title: "Revise e copie",
-    description:
-      "Revise as adaptações sugeridas, ajuste conforme necessário e exporte o resultado. Você mantém o controle total do processo.",
+    description: "Revise as adaptações sugeridas, ajuste conforme necessário e exporte o resultado.",
   },
 ];
 
 export function FlowSection() {
   return (
-    <section id="como-funciona" className="py-20 lg:py-24">
+    <section id="como-funciona" className="bg-white py-20">
       <div className="container-page">
-        <div className="mb-12 flex flex-col items-center gap-3 text-center">
-          <Badge variant="outline">Como funciona</Badge>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-text-primary lg:text-4xl">
-            Três passos para adaptar suas provas
-          </h2>
-          <p className="max-w-2xl text-text-secondary">
-            Um fluxo simples e intuitivo que coloca a inteligência artificial a serviço da inclusão educacional.
-          </p>
-        </div>
+        <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-text-primary">
+          Como funciona
+        </h2>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="relative grid gap-8 md:grid-cols-3">
+          {/* Dashed connector line (desktop only) */}
+          <div
+            className="absolute left-[calc(16.67%+20px)] right-[calc(16.67%+20px)] top-5 hidden h-px border-t border-dashed border-border-default md:block"
+            aria-hidden="true"
+          />
+
           {steps.map((step) => (
-            <Card key={step.number} variant="default" padding="lg" hover className="relative">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-700">
-                    <step.icon className="h-5 w-5" />
-                  </span>
-                  <span className="font-code text-xs font-bold text-text-muted">PASSO {step.number}</span>
-                </div>
-                <h3 className="text-lg font-semibold text-text-primary">{step.title}</h3>
+            <div key={step.number} className="flex flex-col items-center text-center">
+              {/* Number circle */}
+              <div className="relative z-10 mb-4 flex h-10 w-10 items-center justify-center rounded-full bg-brand-600 text-sm font-bold text-white">
+                {step.number}
+              </div>
+
+              {/* Card */}
+              <div className="rounded-xl border border-border-default bg-white p-6 shadow-xs">
+                <step.icon className="mx-auto mb-3 h-6 w-6 text-brand-500" />
+                <h3 className="mb-2 text-lg font-semibold text-text-primary">{step.title}</h3>
                 <p className="text-sm leading-relaxed text-text-secondary">{step.description}</p>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>
