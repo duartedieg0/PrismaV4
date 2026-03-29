@@ -5,6 +5,7 @@ export { Card, CardHeader, CardTitle, CardDescription } from "./components/card"
 export { Badge } from "./components/badge";
 export { Logo } from "./components/logo";
 export { Avatar } from "./components/avatar";
+export { BrowserFrame } from "./components/browser-frame";
 export { StatCard } from "./components/stat-card";
 export { TerminalBlock, TerminalLine } from "./components/terminal-block";
 export { Divider } from "./components/divider";
