@@ -26,7 +26,8 @@ Hook de polling + melhorias incrementais no `ProcessingStatus` existente. Aprove
 A client-side hook that polls the existing status endpoint.
 
 - **Interval:** 4 seconds
-- **Auto-stop:** Stops polling when status is `completed` or `error`
+- **Auto-stop:** Stops polling when status is `completed`, `error`, or `awaiting_answers`
+- **Status redirects:** On `completed` → redirect to `/exams/{id}/result`. On `awaiting_answers` → redirect to `/exams/{id}/extraction`
 - **Input:** `examId: string`, `initialData: ExamProgressData`
 - **Returns:** `{ status, errorMessage, progress, isPolling }`
 - Uses `initialData` from server render as first value — no loading flash
@@ -62,7 +63,9 @@ Add `questionsCompleted` field to the response. A question is "completed" when *
 }
 ```
 
-**Implementation:** After fetching adaptation counts, group adaptations by `question_id` and count how many questions have all adaptations completed. This can be done with a query that counts adaptations per question and compares against total per question.
+**Implementation:** Fetch all adaptations as `{ question_id, status }` (not `head: true`), group in JS by `question_id`, count questions where every adaptation has status `completed`. The dataset is small (typically <100 rows), so in-JS grouping is fine.
+
+**Early return (zero questions):** The existing zero-questions early return must also include `questionsCompleted: 0` in the progress object.
 
 ### 3. `ProcessingStatus` — Client Component Refactor
 
@@ -71,15 +74,15 @@ Convert from server component to `"use client"`. Receives `initialData` as props
 #### 3a. Phases without granular progress (uploading, extracting)
 
 - Keep the existing animated pulse bar
-- Add **rotating messages** that cycle every ~4s to give a sense of activity:
-  - Extracting: "Lendo o PDF...", "Identificando questoes...", "Analisando alternativas...", "Interpretando enunciados..."
+- **Uploading:** Static message "Fazendo upload do arquivo PDF..." (this phase is near-instant, no rotating messages needed)
+- **Extracting:** Add **rotating messages** that cycle every ~4s to give a sense of activity: "Lendo o PDF...", "Identificando questoes...", "Analisando alternativas...", "Interpretando enunciados..."
 - Subtle time estimate text: "Isso geralmente leva entre 1 e 2 minutos"
 
 #### 3b. Adaptation phase (analyzing with progress > 0)
 
 - Title: "Adaptando questoes..."
 - Real progress bar with percentage
-- Primary counter: **"Questao 3 de 10 concluida"** (using `questionsCompleted / questionsCount`)
+- Primary counter: **"3 de 10 questoes concluidas"** (using `questionsCompleted / questionsCount`). Singular form "1 de N questao concluida" when `questionsCompleted === 1`.
 - Contextual rotating messages: "Analisando habilidades BNCC...", "Identificando nivel Bloom...", "Gerando adaptacoes..."
 
 #### 3c. Completion (completed)
@@ -95,6 +98,7 @@ Convert from server component to `"use client"`. Receives `initialData` as props
 
 `processing/page.tsx` remains a server component:
 - Fetches initial data (exam status, progress)
+- **Server-side redirects:** If status is already `completed`, redirect to `/exams/{id}/result`. If `awaiting_answers`, redirect to `/exams/{id}/extraction` (already exists). This prevents flash-of-wrong-content before the client hook mounts.
 - Passes data as `initialData` prop to `ProcessingStatus`
 
 `ProcessingStatus` becomes `"use client"`:
@@ -102,6 +106,7 @@ Convert from server component to `"use client"`. Receives `initialData` as props
 - Mounts `useExamProgress` hook which starts polling
 - Updates UI reactively as polling returns new data
 - On `completed` → redirects to result page
+- On `awaiting_answers` → redirects to extraction page
 - On `error` → stops polling, shows error UI
 
 ### 5. Data Flow
@@ -114,6 +119,7 @@ Server render (page.tsx)
         -> useExamProgress starts polling every 4s
           -> each poll updates status, progress, messages
             -> status === "completed" -> router.push(/result)
+            -> status === "awaiting_answers" -> router.push(/extraction)
             -> status === "error" -> stop polling, show error
 ```
 
