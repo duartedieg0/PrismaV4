@@ -1,53 +1,25 @@
+import { cn } from "@/lib/utils";
+
 type StatusBadgeProps = Readonly<{
   label: string;
   tone?: "default" | "secondary" | "destructive" | "outline" | "warning";
 }>;
 
-const toneStyles = {
-  default: {
-    background: "rgba(5, 150, 105, 0.12)",
-    color: "var(--accent-strong)",
-    border: "1px solid rgba(5, 150, 105, 0.16)",
-  },
-  secondary: {
-    background: "rgba(96, 112, 137, 0.12)",
-    color: "#4b5563",
-    border: "1px solid rgba(96, 112, 137, 0.14)",
-  },
-  destructive: {
-    background: "rgba(220, 38, 38, 0.12)",
-    color: "var(--danger)",
-    border: "1px solid rgba(220, 38, 38, 0.16)",
-  },
-  warning: {
-    background: "rgba(154, 97, 0, 0.12)",
-    color: "var(--warning)",
-    border: "1px solid rgba(154, 97, 0, 0.16)",
-  },
-  outline: {
-    background: "rgba(255, 255, 255, 0.7)",
-    color: "var(--color-text)",
-    border: "1px solid var(--color-border-strong)",
-  },
+const toneClasses = {
+  default: "bg-green-50 text-green-700 border-green-200",
+  secondary: "bg-surface-muted text-text-secondary border-border-default",
+  destructive: "bg-red-50 text-red-700 border-red-200",
+  warning: "bg-amber-50 text-amber-700 border-amber-200",
+  outline: "bg-white/70 text-text-primary border-border-strong",
 } as const;
 
 export function StatusBadge({ label, tone = "default" }: StatusBadgeProps) {
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0.35rem 0.75rem",
-        borderRadius: "var(--radius-pill)",
-        background: toneStyles[tone].background,
-        color: toneStyles[tone].color,
-        border: toneStyles[tone].border,
-        fontWeight: 700,
-        fontSize: "0.74rem",
-        letterSpacing: "0.04em",
-        textTransform: "uppercase",
-      }}
+      className={cn(
+        "inline-flex items-center justify-center rounded-pill border px-3 py-1.5 text-xs font-bold uppercase tracking-wider",
+        toneClasses[tone],
+      )}
     >
       {label}
     </span>
