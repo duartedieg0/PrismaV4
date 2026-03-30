@@ -30,7 +30,7 @@ export function QuestionResult({ examId, question, onCopy }: QuestionResultProps
     >
       {/* ── Question Header ── */}
       <div className="flex items-start gap-4 border-b border-border-default bg-surface-muted/40 p-5">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white shadow-glow">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-600 text-sm font-bold text-white shadow-soft">
           {question.orderNum}
         </span>
 
