@@ -9,9 +9,7 @@ import {
   Layers,
   Copy,
   Check,
-  ChevronDown,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Badge } from "@/design-system/components/badge";
 import { Button } from "@/design-system/components/button";
 import { QuestionResult } from "@/features/exams/results/components/question-result";
@@ -23,7 +21,6 @@ type ResultPageViewProps = {
 };
 
 export function ResultPageView({ result }: ResultPageViewProps) {
-  const [expandedCopySupport, setExpandedCopySupport] = useState<string | null>(null);
   const [copiedSupportId, setCopiedSupportId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -137,7 +134,7 @@ export function ResultPageView({ result }: ResultPageViewProps) {
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl bg-white/70 p-3 ring-1 ring-border-default">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-100 text-brand-700">
                 <Check className="h-4 w-4" />
               </div>
               <div>
@@ -160,27 +157,12 @@ export function ResultPageView({ result }: ResultPageViewProps) {
 
       {/* ── Bulk Copy per Support ── */}
       <section className="rounded-2xl border border-border-default bg-white p-5 shadow-soft">
-        <button
-          type="button"
-          onClick={() =>
-            setExpandedCopySupport(expandedCopySupport ? null : "__open__")
-          }
-          className="flex w-full cursor-pointer items-center justify-between text-left"
-        >
+        <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-0.5">
             <h3 className="text-sm font-semibold text-text-primary">Copiar prova completa</h3>
             <p className="text-xs text-text-muted">Copie todas as questões adaptadas por apoio</p>
           </div>
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 text-text-muted transition-transform duration-200",
-              expandedCopySupport && "rotate-180",
-            )}
-          />
-        </button>
-
-        {expandedCopySupport ? (
-          <div className="mt-4 flex flex-wrap gap-2 animate-fade-in">
+          <div className="flex flex-wrap gap-2">
             {result.questions[0]?.supports.map((support) => {
               const isCopied = copiedSupportId === support.supportId;
               return (
@@ -200,7 +182,7 @@ export function ResultPageView({ result }: ResultPageViewProps) {
               );
             })}
           </div>
-        ) : null}
+        </div>
       </section>
 
       {/* ── Section Heading ── */}
