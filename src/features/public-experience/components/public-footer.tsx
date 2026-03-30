@@ -2,18 +2,18 @@ import Link from "next/link";
 import { Logo } from "@/design-system/components/logo";
 
 const footerLinks = {
-  produto: [
+  Produto: [
     { label: "Plataforma", href: "#" },
     { label: "Como funciona", href: "#como-funciona" },
     { label: "Recursos", href: "#recursos" },
     { label: "Preços", href: "#" },
   ],
-  suporte: [
+  Suporte: [
     { label: "Central de ajuda", href: "#" },
     { label: "Contato", href: "#" },
     { label: "Status", href: "#" },
   ],
-  legal: [
+  Legal: [
     { label: "Privacidade", href: "#" },
     { label: "Termos de uso", href: "#" },
     { label: "Cookies", href: "#" },
@@ -22,13 +22,13 @@ const footerLinks = {
 
 export function PublicFooter() {
   return (
-    <footer className="border-t border-border-default bg-surface-muted/50">
-      <div className="container-page py-12 lg:py-16">
+    <footer className="bg-brand-950">
+      <div className="container-page py-12">
         <div className="grid gap-10 lg:grid-cols-4">
           {/* Brand */}
           <div className="flex flex-col gap-4 lg:col-span-1">
-            <Logo size="sm" variant="full" />
-            <p className="max-w-xs text-sm leading-relaxed text-text-secondary">
+            <Logo size="sm" variant="mono" />
+            <p className="max-w-xs text-sm leading-relaxed text-brand-300">
               Plataforma educacional com IA para adaptar avaliações e promover inclusão na sala de aula.
             </p>
           </div>
@@ -36,7 +36,7 @@ export function PublicFooter() {
           {/* Links */}
           {Object.entries(footerLinks).map(([section, links]) => (
             <div key={section} className="flex flex-col gap-3">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.05em] text-brand-200">
                 {section}
               </h3>
               <ul className="flex flex-col gap-2">
@@ -44,7 +44,7 @@ export function PublicFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-text-secondary transition-colors hover:text-text-primary"
+                      className="text-sm text-brand-300 transition-colors duration-150 hover:text-white"
                     >
                       {link.label}
                     </Link>
@@ -55,8 +55,8 @@ export function PublicFooter() {
           ))}
         </div>
 
-        <div className="mt-10 border-t border-border-default pt-6 text-center">
-          <p className="text-xs text-text-muted">
+        <div className="mt-10 border-t border-brand-800 pt-6 text-center">
+          <p className="text-xs text-brand-400/60">
             © {new Date().getFullYear()} Adapte Minha Prova. Todos os direitos reservados.
           </p>
         </div>
