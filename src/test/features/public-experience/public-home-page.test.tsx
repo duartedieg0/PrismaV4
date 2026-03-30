@@ -8,6 +8,6 @@ describe("public home page", () => {
 
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/adapte avaliações/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/comece grátis/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/comece agora/i).length).toBeGreaterThan(0);
   });
 });

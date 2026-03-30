@@ -28,20 +28,19 @@ describe("public landing composition", () => {
 
     expect(screen.getByRole("heading", { level: 1 })).toBeInTheDocument();
     expect(screen.getByText(/adapte avaliações em/i)).toBeInTheDocument();
-    expect(screen.getAllByText(/comece grátis/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/plataforma educacional/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/comece agora/i).length).toBeGreaterThan(0);
   });
 
   it("renders the flow in three explicit steps", () => {
     renderPublicLanding();
 
-    expect(screen.getByText(/três passos para adaptar/i)).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /como funciona/i })).toBeInTheDocument();
     expect(screen.getByText(/envie sua prova/i)).toBeInTheDocument();
     expect(screen.getByText(/ia adapta as questões/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: /revise e copie/i })).toBeInTheDocument();
   });
 
-  it("keeps the benefits legible and the FAQ accessible", () => {
+  it("keeps the benefits legible and the testimonials accessible", () => {
     renderPublicLanding();
 
     expect(screen.getByRole("heading", { name: /economia de tempo/i })).toBeInTheDocument();
@@ -55,7 +54,7 @@ describe("public landing composition", () => {
     renderPublicLanding();
 
     expect(screen.getByText(/todos os direitos reservados/i)).toBeInTheDocument();
-    expect(screen.getByText(/pronto para transformar/i)).toBeInTheDocument();
+    expect(screen.getByText(/comece a adaptar/i)).toBeInTheDocument();
 
     const headings = screen.getAllByRole("heading");
     expect(headings.length).toBeGreaterThan(3);

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { axe } from "jest-axe";
 import { describe, expect, it } from "vitest";
 import { BenefitsSection } from "@/features/public-experience/components/benefits-section";
@@ -28,7 +28,5 @@ describe("public landing accessibility", () => {
     const { container } = renderPublicLanding();
 
     expect((await axe(container)).violations).toHaveLength(0);
-    expect(screen.getByRole("link", { name: /entrar com google/i })).toBeInTheDocument();
-    expect(screen.getByRole("region", { name: /perguntas frequentes/i })).toBeInTheDocument();
   });
 });
