@@ -88,7 +88,7 @@ export function QuestionReviewCard({
               value={value}
               disabled={disabled}
               onChange={(event) => onChange(event.currentTarget.value)}
-              className="w-full rounded-xl border border-border-default px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+              className="h-10 w-full rounded-xl border border-border-default bg-white px-3.5 text-sm text-text-primary transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 hover:border-border-strong"
             />
           </div>
         )}
