@@ -74,11 +74,14 @@ describe("result page view", () => {
   it("renders the result hierarchy and BNCC/Bloom context", () => {
     render(<ResultPageView result={result} />);
 
-    expect(screen.getByRole("heading", { name: /matemática/i })).toBeInTheDocument();
+    expect(screen.getByText(/matemática/i)).toBeInTheDocument();
     expect(screen.getByText(/frações/i)).toBeInTheDocument();
+    expect(screen.getByText(/quanto é metade mais um quarto/i)).toBeInTheDocument();
+
+    // Pedagogical details hidden by default — open collapsible
+    fireEvent.click(screen.getByRole("button", { name: /detalhes pedagógicos/i }));
     expect(screen.getByText(/ef07ma01/i)).toBeInTheDocument();
     expect(screen.getByText(/aplicar/i)).toBeInTheDocument();
-    expect(screen.getByText(/quanto é metade mais um quarto/i)).toBeInTheDocument();
   });
 
   it("switches support tabs and exposes error state per adaptation", () => {
@@ -86,7 +89,7 @@ describe("result page view", () => {
 
     fireEvent.click(screen.getByRole("tab", { name: /tdah/i }));
 
-    expect(screen.getByText(/erro ao adaptar a questão/i)).toBeInTheDocument();
+    expect(screen.getByText(/erro ao adaptar/i)).toBeInTheDocument();
   });
 
   it("copies adaptation content and submits feedback", async () => {
@@ -97,7 +100,8 @@ describe("result page view", () => {
       "Quanto é metade mais um quarto?",
     );
 
-    fireEvent.click(screen.getByRole("radio", { name: /5 estrelas/i }));
+    fireEvent.click(screen.getByRole("button", { name: /5 estrelas/i }));
+    fireEvent.click(screen.getByRole("button", { name: /adicionar comentário/i }));
     fireEvent.change(screen.getByLabelText(/comentário/i), {
       target: { value: "Muito bom." },
     });
