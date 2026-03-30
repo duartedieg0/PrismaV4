@@ -109,6 +109,17 @@ describe("exam status route", () => {
             error: null,
           }),
         })),
+      })
+      .mockReturnValueOnce({
+        in: vi.fn().mockResolvedValue({
+          data: [
+            { question_id: "question-1", status: "completed" },
+            { question_id: "question-1", status: "pending" },
+            { question_id: "question-2", status: "completed" },
+            { question_id: "question-2", status: "pending" },
+          ],
+          error: null,
+        }),
       });
 
     const response = await GET(new Request("http://localhost:3000/api/exams/exam-1/status"), {
@@ -124,7 +135,72 @@ describe("exam status route", () => {
         total: 4,
         completed: 2,
         questionsCount: 2,
+        questionsCompleted: 0,
       },
+    });
+  });
+
+  it("counts questionsCompleted when all adaptations for a question are done", async () => {
+    const { GET } = await import("@/app/api/exams/[id]/status/route");
+
+    getUser.mockResolvedValue({ data: { user: { id: "teacher-1" } } });
+    examSingle.mockResolvedValue({
+      data: { id: "exam-1", user_id: "teacher-1", status: "analyzing", error_message: null },
+      error: null,
+    });
+    questionsEq.mockResolvedValue({
+      data: [{ id: "question-1" }, { id: "question-2" }],
+      error: null,
+    });
+    adaptationsSelect
+      .mockReturnValueOnce({
+        in: adaptationsIn.mockResolvedValueOnce({ count: 4, error: null }),
+      })
+      .mockReturnValueOnce({
+        in: vi.fn(() => ({
+          eq: adaptationsEq.mockResolvedValue({ count: 3, error: null }),
+        })),
+      })
+      .mockReturnValueOnce({
+        in: vi.fn().mockResolvedValue({
+          data: [
+            { question_id: "question-1", status: "completed" },
+            { question_id: "question-1", status: "completed" },
+            { question_id: "question-2", status: "completed" },
+            { question_id: "question-2", status: "pending" },
+          ],
+          error: null,
+        }),
+      });
+
+    const response = await GET(new Request("http://localhost:3000/api/exams/exam-1/status"), {
+      params: Promise.resolve({ id: "exam-1" }),
+    });
+
+    const body = await response.json();
+    expect(body.data.progress.questionsCompleted).toBe(1);
+  });
+
+  it("includes questionsCompleted in zero-questions early return", async () => {
+    const { GET } = await import("@/app/api/exams/[id]/status/route");
+
+    getUser.mockResolvedValue({ data: { user: { id: "teacher-1" } } });
+    examSingle.mockResolvedValue({
+      data: { id: "exam-1", user_id: "teacher-1", status: "extracting", error_message: null },
+      error: null,
+    });
+    questionsEq.mockResolvedValue({ data: [], error: null });
+
+    const response = await GET(new Request("http://localhost:3000/api/exams/exam-1/status"), {
+      params: Promise.resolve({ id: "exam-1" }),
+    });
+
+    const body = await response.json();
+    expect(body.data.progress).toEqual({
+      total: 0,
+      completed: 0,
+      questionsCount: 0,
+      questionsCompleted: 0,
     });
   });
 });

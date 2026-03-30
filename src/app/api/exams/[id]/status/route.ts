@@ -43,11 +43,11 @@ export async function GET(_: Request, { params }: RouteContext) {
     return apiSuccess({
       status: exam.status,
       errorMessage: exam.error_message,
-      progress: { total: 0, completed: 0, questionsCount: 0 },
+      progress: { total: 0, completed: 0, questionsCount: 0, questionsCompleted: 0 },
     });
   }
 
-  const [{ count: total }, { count: completed }] = await Promise.all([
+  const [{ count: total }, { count: completed }, { data: adaptationRows }] = await Promise.all([
     supabase
       .from("adaptations")
       .select("*", { count: "exact", head: true })
@@ -57,7 +57,18 @@ export async function GET(_: Request, { params }: RouteContext) {
       .select("*", { count: "exact", head: true })
       .in("question_id", questionIds)
       .eq("status", "completed"),
+    supabase
+      .from("adaptations")
+      .select("question_id, status")
+      .in("question_id", questionIds),
   ]);
+
+  const grouped = new Map<string, boolean>();
+  for (const row of adaptationRows ?? []) {
+    const current = grouped.get(row.question_id) ?? true;
+    grouped.set(row.question_id, current && row.status === "completed");
+  }
+  const questionsCompleted = [...grouped.values()].filter(Boolean).length;
 
   return apiSuccess({
     status: exam.status,
@@ -66,6 +77,7 @@ export async function GET(_: Request, { params }: RouteContext) {
       total: total ?? 0,
       completed: completed ?? 0,
       questionsCount: questionIds.length,
+      questionsCompleted,
     },
   });
 }
