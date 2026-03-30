@@ -26,8 +26,6 @@ type NewExamFormProps = Readonly<{
 
 type FormErrors = Partial<Record<"subjectId" | "gradeLevelId" | "topic" | "supportSelections" | "uploadedPdf", string>>;
 
-const inputClass = "w-full rounded-xl border border-border-default px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100";
-
 export function NewExamForm({
   subjects,
   gradeLevels,
@@ -153,16 +151,21 @@ export function NewExamForm({
         <div className="flex flex-col gap-5">
           <div className="flex flex-col gap-1.5">
             <label htmlFor="subject-id" className="text-sm font-semibold text-text-primary">
-              Disciplina
+              Disciplina <span className="text-danger">*</span>
             </label>
             <select
               id="subject-id"
-              className={inputClass}
+              className="h-10 w-full rounded-xl border border-border-default bg-white px-3.5 text-sm text-text-primary transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 hover:border-border-strong"
               value={subjectId}
               disabled={isSubmitting}
               onChange={(event) => {
                 clearError("subjectId");
                 setSubjectId(event.currentTarget.value);
+              }}
+              onBlur={() => {
+                if (!subjectId) {
+                  setErrors((current) => ({ ...current, subjectId: "Selecione uma disciplina." }));
+                }
               }}
             >
               <option value="">Selecione uma disciplina</option>
@@ -177,16 +180,21 @@ export function NewExamForm({
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="grade-level-id" className="text-sm font-semibold text-text-primary">
-              Ano/Série
+              Ano/Série <span className="text-danger">*</span>
             </label>
             <select
               id="grade-level-id"
-              className={inputClass}
+              className="h-10 w-full rounded-xl border border-border-default bg-white px-3.5 text-sm text-text-primary transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 hover:border-border-strong"
               value={gradeLevelId}
               disabled={isSubmitting}
               onChange={(event) => {
                 clearError("gradeLevelId");
                 setGradeLevelId(event.currentTarget.value);
+              }}
+              onBlur={() => {
+                if (!gradeLevelId) {
+                  setErrors((current) => ({ ...current, gradeLevelId: "Selecione um ano/série." }));
+                }
               }}
             >
               <option value="">Selecione um ano/série</option>
@@ -201,11 +209,11 @@ export function NewExamForm({
 
           <div className="flex flex-col gap-1.5">
             <label htmlFor="topic" className="text-sm font-semibold text-text-primary">
-              Tema
+              Tema <span className="text-text-muted font-normal">(opcional)</span>
             </label>
             <textarea
               id="topic"
-              className={inputClass}
+              className="resize-y min-h-24 py-2.5 w-full rounded-xl border border-border-default bg-white px-3.5 text-sm text-text-primary transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 hover:border-border-strong"
               value={topic}
               disabled={isSubmitting}
               placeholder="Ex.: Frações, Brasil República, Revolução Industrial"
