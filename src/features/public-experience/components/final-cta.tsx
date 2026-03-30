@@ -17,7 +17,7 @@ export function FinalCta() {
         <h2 className="text-2xl font-extrabold tracking-tight text-text-inverse sm:text-3xl lg:text-4xl">
           Comece a adaptar suas avaliações hoje
         </h2>
-        <p className="max-w-lg text-lg text-brand-200">
+        <p className="max-w-lg text-lg text-white/70">
           Entre com sua conta e transforme sua rotina de adaptação sem abrir mão da revisão humana.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
@@ -30,13 +30,13 @@ export function FinalCta() {
             <Button
               variant="ghost"
               size="lg"
-              className="rounded-full border border-brand-200/30 text-brand-200 hover:bg-white/[0.08] hover:text-white"
+              className="rounded-full border border-white/20 text-white/70 hover:bg-white/[0.08] hover:text-white"
             >
               Falar com a equipe
             </Button>
           </Link>
         </div>
-        <p className="text-sm text-brand-400/60">
+        <p className="text-sm text-white/40">
           Sem cartão de crédito · Gratuito para testar · Cancele quando quiser
         </p>
       </div>

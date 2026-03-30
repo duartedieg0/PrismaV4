@@ -28,7 +28,7 @@ export function PublicFooter() {
           {/* Brand */}
           <div className="flex flex-col gap-4 lg:col-span-1">
             <Logo size="sm" variant="mono" />
-            <p className="max-w-xs text-sm leading-relaxed text-brand-300">
+            <p className="max-w-xs text-sm leading-relaxed text-white/60">
               Plataforma educacional com IA para adaptar avaliações e promover inclusão na sala de aula.
             </p>
           </div>
@@ -36,7 +36,7 @@ export function PublicFooter() {
           {/* Links */}
           {Object.entries(footerLinks).map(([section, links]) => (
             <div key={section} className="flex flex-col gap-3">
-              <h3 className="text-xs font-semibold uppercase tracking-[0.05em] text-brand-200">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.05em] text-white/80">
                 {section}
               </h3>
               <ul className="flex flex-col gap-2">
@@ -44,7 +44,7 @@ export function PublicFooter() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-sm text-brand-300 transition-colors duration-150 hover:text-white"
+                      className="text-sm text-white/60 transition-colors duration-150 hover:text-white"
                     >
                       {link.label}
                     </Link>
@@ -56,7 +56,7 @@ export function PublicFooter() {
         </div>
 
         <div className="mt-10 border-t border-brand-800 pt-6 text-center">
-          <p className="text-xs text-brand-400/60">
+          <p className="text-xs text-white/40">
             © {new Date().getFullYear()} Adapte Minha Prova. Todos os direitos reservados.
           </p>
         </div>
