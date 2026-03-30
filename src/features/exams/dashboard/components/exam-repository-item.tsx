@@ -6,10 +6,10 @@ import { Button } from "@/design-system/components/button";
 import type { TeacherExamListItem } from "@/features/exams/dashboard/contracts";
 
 const statusTone: Record<TeacherExamListItem["statusTone"], string> = {
-  default: "border-l-emerald-500",
-  destructive: "border-l-red-500",
-  outline: "border-l-stone-400",
-  secondary: "border-l-amber-500",
+  default: "border-l-[var(--color-success)]",
+  destructive: "border-l-[var(--color-danger)]",
+  outline: "border-l-[var(--color-border-strong)]",
+  secondary: "border-l-[var(--color-warning)]",
 };
 
 const statusBadgeVariant: Record<TeacherExamListItem["statusTone"], "success" | "danger" | "outline" | "warning"> = {
@@ -22,32 +22,32 @@ const statusBadgeVariant: Record<TeacherExamListItem["statusTone"], "success" | 
 function getStatusAccent(tone: TeacherExamListItem["statusTone"]) {
   switch (tone) {
     case "default":
-      return "#10b981";
+      return "var(--color-success)";
     case "destructive":
-      return "#dc2626";
+      return "var(--color-danger)";
     case "outline":
-      return "#64766f";
+      return "var(--color-text-secondary)";
     case "secondary":
-      return "#9a6100";
+      return "var(--color-warning)";
     default:
-      return "#0d7c66";
+      return "var(--color-text-secondary)";
   }
 }
 
 function getActionLabel(exam: TeacherExamListItem) {
   if (exam.status === "completed") {
-    return "Visualizar";
+    return "Ver resultado";
   }
 
   if (exam.status === "error") {
-    return "Ver detalhes";
+    return "Ver erro";
   }
 
   if (exam.status === "awaiting_answers") {
-    return "Continuar";
+    return "Revisar questões";
   }
 
-  return "Acompanhar";
+  return "Ver progresso";
 }
 
 function formatRelativeDate(date: string) {
@@ -60,6 +60,20 @@ function formatRelativeDate(date: string) {
 
   const diffDays = Math.round(diffHours / 24);
   return `há ${diffDays} dia${diffDays > 1 ? "s" : ""}`;
+}
+
+function formatAbsoluteDate(date: string) {
+  try {
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(date));
+  } catch {
+    return date;
+  }
 }
 
 type ExamRepositoryItemProps = Readonly<{ exam: TeacherExamListItem }>;
@@ -106,7 +120,7 @@ export function ExamRepositoryItem({ exam }: ExamRepositoryItemProps) {
         ) : null}
 
         <div className="flex items-center justify-between gap-4 border-t border-border-default pt-4">
-          <span className="text-xs text-text-secondary">
+          <span className="text-xs text-text-secondary" title={formatAbsoluteDate(exam.updatedAt)}>
             {formatRelativeDate(exam.updatedAt)}
           </span>
           <span className="text-sm font-bold" style={{ color: accent }}>

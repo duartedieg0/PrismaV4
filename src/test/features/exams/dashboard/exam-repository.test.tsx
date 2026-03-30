@@ -59,7 +59,7 @@ describe("exam repository", () => {
       "/exams/new",
     );
     expect(screen.getByText(/aguardando respostas/i)).toBeInTheDocument();
-    expect(screen.getByText(/erro/i)).toBeInTheDocument();
+    expect(screen.getByText("Erro")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /frações/i })).toHaveAttribute(
       "href",
       "/exams/exam-1/extraction",
