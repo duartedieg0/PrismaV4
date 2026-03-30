@@ -1,8 +1,3 @@
-import { Card } from "@/design-system/components/card";
-import { Avatar } from "@/design-system/components/avatar";
-import { Badge } from "@/design-system/components/badge";
-import { Quote } from "lucide-react";
-
 const testimonials = [
   {
     name: "Maria Silva",
@@ -24,35 +19,54 @@ const testimonials = [
   },
 ];
 
+function getInitials(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+  }
+  return name.slice(0, 2).toUpperCase();
+}
+
 export function PublicFaq() {
   return (
-    <section id="depoimentos" className="py-20 lg:py-24">
+    <section id="depoimentos" className="bg-white py-20">
       <div className="container-page">
-        <div className="mb-12 flex flex-col items-center gap-3 text-center">
-          <Badge variant="outline">Depoimentos</Badge>
-          <h2 className="font-display text-3xl font-bold tracking-tight text-text-primary lg:text-4xl">
-            O que dizem os professores
-          </h2>
-        </div>
+        <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-text-primary">
+          O que dizem os professores
+        </h2>
 
-        <div className="grid gap-6 md:grid-cols-3">
+        {/* Desktop: grid, Mobile: horizontal scroll */}
+        <div className="flex gap-6 overflow-x-auto pb-4 snap-x snap-mandatory md:grid md:grid-cols-3 md:overflow-visible md:pb-0">
           {testimonials.map((t) => (
-            <Card key={t.name} variant="default" padding="lg" hover>
+            <div
+              key={t.name}
+              className="min-w-[280px] shrink-0 snap-center rounded-xl border border-border-default bg-white p-7 shadow-xs md:min-w-0"
+            >
               <div className="flex flex-col gap-4">
-                <Quote className="h-8 w-8 text-brand-200" />
-                <p className="text-sm leading-relaxed text-text-secondary italic">
+                {/* Decorative quote */}
+                <span className="text-4xl font-extrabold leading-none text-brand-100" aria-hidden="true">
+                  &ldquo;
+                </span>
+
+                <p className="text-sm italic leading-[1.7] text-text-secondary">
                   &ldquo;{t.quote}&rdquo;
                 </p>
-                <div className="mt-auto flex items-center gap-3 border-t border-border-default pt-4">
-                  <Avatar name={t.name} size="md" />
+
+                {/* Separator */}
+                <div className="my-2 h-px bg-border-muted" />
+
+                {/* Attribution */}
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-50 text-sm font-semibold text-brand-600">
+                    {getInitials(t.name)}
+                  </div>
                   <div className="flex flex-col">
                     <span className="text-sm font-semibold text-text-primary">{t.name}</span>
-                    <span className="text-xs text-text-muted">{t.role}</span>
-                    <span className="text-xs text-text-muted">{t.school}</span>
+                    <span className="text-xs text-text-muted">{t.role} · {t.school}</span>
                   </div>
                 </div>
               </div>
-            </Card>
+            </div>
           ))}
         </div>
       </div>
