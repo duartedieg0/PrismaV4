@@ -6,7 +6,6 @@ import { Button } from "@/design-system/components/button";
 import { Logo } from "@/design-system/components/logo";
 import { Divider } from "@/design-system/components/divider";
 import { Input } from "@/design-system/components/input";
-import { TerminalBlock, TerminalLine } from "@/design-system/components/terminal-block";
 
 export default function LoginPage() {
   async function handleGoogleLogin() {
@@ -22,41 +21,50 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen">
-      {/* Left side - Terminal branding (hidden on mobile) */}
-      <div className="relative hidden w-[45%] flex-col items-center justify-center overflow-hidden bg-surface-terminal lg:flex">
-        {/* Background decorations */}
+      {/* Left side - Indigo branding (hidden on mobile) */}
+      <div className="relative hidden w-[45%] flex-col items-center justify-center overflow-hidden bg-surface-dark lg:flex">
+        {/* Subtle radial gradient */}
         <div
-          className="absolute inset-0 opacity-[0.03]"
+          className="absolute inset-0"
           style={{
-            backgroundImage: "radial-gradient(circle, #34d399 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
+            background: "radial-gradient(ellipse at center, rgba(55, 48, 163, 0.4) 0%, transparent 70%)",
           }}
           aria-hidden="true"
         />
-        <div className="absolute left-1/2 top-1/4 h-64 w-64 -translate-x-1/2 rounded-full bg-brand-500/8 blur-3xl" aria-hidden="true" />
-        <div className="absolute bottom-1/4 right-1/4 h-48 w-48 rounded-full bg-brand-400/8 blur-3xl" aria-hidden="true" />
 
         <div className="relative flex flex-col items-center gap-8 px-12">
-          <Logo variant="mark" size="lg" className="animate-pulse-glow" />
+          <Logo variant="mark" size="lg" />
 
-          <h2 className="text-center font-display text-2xl font-bold text-white">
+          <h2 className="text-center text-2xl font-bold text-white">
             Transforme avaliações com{" "}
-            <span className="text-brand-400 text-glow">inteligência artificial</span>
+            <span className="text-brand-200">inteligência artificial</span>
           </h2>
 
-          <TerminalBlock title="prisma" className="w-full max-w-sm">
-            <div className="flex flex-col gap-2">
-              <TerminalLine prompt="$" command="prisma login" />
-              <div className="flex flex-col gap-1 pl-5">
-                <span className="text-slate-400">→ Conectando à plataforma...</span>
-                <span className="text-brand-400">✓ Bem-vindo de volta, Professor!</span>
-                <span className="text-slate-400">→ Carregando workspace...</span>
-                <span className="text-brand-400">✓ 12 provas prontas para revisão</span>
-              </div>
-            </div>
-          </TerminalBlock>
+          {/* Feature list */}
+          <ul className="flex w-full max-w-sm flex-col gap-3">
+            {[
+              "Adapte provas em minutos, não horas",
+              "IA especializada em inclusão educacional",
+              "Você mantém o controle de cada adaptação",
+              "Suporte a TDAH, dislexia, TEA e mais",
+            ].map((feature) => (
+              <li key={feature} className="flex items-start gap-3">
+                <svg
+                  className="mt-0.5 h-5 w-5 shrink-0 text-brand-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                </svg>
+                <span className="text-sm text-brand-200">{feature}</span>
+              </li>
+            ))}
+          </ul>
 
-          <p className="max-w-xs text-center text-sm text-slate-500">
+          <p className="max-w-xs text-center text-sm text-brand-300">
             Mais de 2.500 professores já estão adaptando suas avaliações com IA.
           </p>
         </div>
