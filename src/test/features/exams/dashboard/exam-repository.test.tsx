@@ -79,9 +79,4 @@ describe("exam repository", () => {
     );
   });
 
-  it("keeps room for future filters without implementing them yet", () => {
-    render(<ExamRepository exams={exams} />);
-
-    expect(screen.getByText(/filtros em breve/i)).toBeInTheDocument();
-  });
 });

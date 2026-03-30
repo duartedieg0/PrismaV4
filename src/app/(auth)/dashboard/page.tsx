@@ -58,7 +58,7 @@ export default async function DashboardPage(_: StaticPageProps) {
         { label: "Dashboard", href: "/dashboard" },
       ]}
     >
-      <div style={{ display: "grid", gap: "1.5rem" }}>
+      <div className="grid gap-6">
         <DashboardHeader
           teacherName={getTeacherFirstName(profileResult.profile.full_name ?? null)}
           stats={stats}

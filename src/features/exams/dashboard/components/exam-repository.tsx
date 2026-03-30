@@ -15,8 +15,6 @@ export function ExamRepository({ exams }: ExamRepositoryProps) {
         </p>
       </div>
 
-      <p className="text-xs text-text-muted italic">Filtros em breve</p>
-
       <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(18rem, 1fr))" }}>
         {exams.map((exam) => (
           <ExamRepositoryItem key={exam.id} exam={exam} />
