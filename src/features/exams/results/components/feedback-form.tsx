@@ -83,7 +83,7 @@ export function FeedbackForm({
                     "h-6 w-6 transition-colors duration-150",
                     value <= displayStars
                       ? "fill-accent-400 text-accent-400"
-                      : "fill-transparent text-stone-300",
+                      : "fill-transparent text-text-muted",
                   )}
                 />
               </button>

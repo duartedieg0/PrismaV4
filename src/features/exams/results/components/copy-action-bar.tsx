@@ -54,12 +54,9 @@ export function CopyActionBar({
       <Button
         onClick={handleCopy}
         type="button"
-        variant={status === "copied" ? "primary" : "outline"}
+        variant={status === "copied" ? "primary" : status === "error" ? "danger" : "outline"}
         size="sm"
-        className={cn(
-          "transition-all duration-200",
-          status === "copied" && "bg-brand-600",
-        )}
+        className="transition-all duration-200"
       >
         {status === "copied" ? (
           <Check className="h-3.5 w-3.5" />
