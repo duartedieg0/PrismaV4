@@ -42,7 +42,11 @@ Varios componentes usam emerald/stone/amber hardcoded. Mapeamento unico usando t
 
 **status-badge.tsx:**
 - Substituir todos os RGBA inline e variaveis indefinidas por tokens de globals.css.
-- Cada tone (default, destructive, secondary, warning) usa a cor semantica correspondente com opacidade via Tailwind.
+- Migrar de inline `style` objects para classes Tailwind. Mapeamento por tone:
+  - `default` (success): `bg-green-50 text-green-700 border border-green-200`
+  - `destructive` (error): `bg-red-50 text-red-700 border border-red-200`
+  - `secondary` (neutral): `bg-surface-muted text-text-secondary border border-border-default`
+  - `warning`: `bg-amber-50 text-amber-700 border border-amber-200`
 
 **extraction-warning-list.tsx:**
 - Substituir `text-amber-600` por `text-[var(--color-warning)]`.
@@ -163,9 +167,10 @@ Botao FAB discreto (fixed bottom-right) que faz scroll suave ate a proxima quest
 
 Quando todas as questoes objetivas tiverem resposta, exibir banner fixo no bottom com botao de submit.
 
-- Estilo: `fixed bottom-0`, `bg-white border-t shadow-elevated`
+- Estilo: `fixed bottom-0 inset-x-0`, `bg-white border-t shadow-elevated`
 - Aparece com `animate-slide-up`
 - Contem: texto "Todas as questoes revisadas" + botao "Avancar para adaptacao"
+- **Prioridade sobre FAB:** Quando o banner aparece, o FAB (5.2) se esconde — o banner ja indica que nao ha mais questoes pendentes, tornando o FAB redundante.
 
 ### 5.4 Migracao visual
 
