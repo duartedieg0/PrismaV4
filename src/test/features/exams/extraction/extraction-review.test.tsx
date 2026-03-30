@@ -74,6 +74,49 @@ describe("extraction review", () => {
     expect(screen.getByText(/nenhuma questão foi extraída para revisão/i)).toBeInTheDocument();
   });
 
+  it("shows progress indicator counting answered questions", () => {
+    render(<ExtractionReview examId="exam-1" questions={questions} />);
+
+    expect(screen.getByText(/0 de 2 respondidas/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("radio", { name: /b 4/i }));
+
+    expect(screen.getByText(/1 de 2 respondidas/i)).toBeInTheDocument();
+  });
+
+  it("shows fixed submit banner when all questions are answered", () => {
+    render(<ExtractionReview examId="exam-1" questions={questions} />);
+
+    fireEvent.click(screen.getByRole("radio", { name: /b 4/i }));
+    fireEvent.change(screen.getByLabelText(/resposta esperada da questão 2/i), {
+      target: { value: "Evaporação" },
+    });
+
+    expect(screen.getByText(/todas as questões revisadas/i)).toBeInTheDocument();
+  });
+
+  const threeQuestions = [
+    ...questions,
+    {
+      id: "question-3",
+      orderNum: 3,
+      content: "Qual a capital do Brasil?",
+      questionType: "objective" as const,
+      alternatives: [
+        { label: "A", text: "São Paulo" },
+        { label: "B", text: "Brasília" },
+      ],
+      visualElements: null,
+      extractionWarning: null,
+    },
+  ];
+
+  it("shows FAB when there are unanswered questions and more than 2 total", () => {
+    render(<ExtractionReview examId="exam-1" questions={threeQuestions} />);
+
+    expect(screen.getByRole("button", { name: /próxima questão sem resposta/i })).toBeInTheDocument();
+  });
+
   it("submits reviewed answers and redirects back to processing", async () => {
     const resolveFetchRef: {
       current: null | ((value: {
