@@ -35,7 +35,7 @@ export function PublicFooter() {
 
           {/* Links */}
           {Object.entries(footerLinks).map(([section, links]) => (
-            <div key={section} className="flex flex-col gap-3">
+            <div key={section} className="flex flex-col gap-3 text-white">
               <h3 className="text-xs font-semibold uppercase tracking-[0.05em] text-white/80">
                 {section}
               </h3>

@@ -142,7 +142,7 @@ export function NewExamForm({
         <div className="flex flex-col gap-1">
           <strong className="text-base font-semibold text-text-primary">Preparação da adaptação</strong>
           <p className="text-sm text-text-secondary">
-            Organize disciplina, série, tema, apoios e PDF em um único fluxo antes de enviar a prova.
+            Organize disciplina, série, tema, apoios e PDF.
           </p>
         </div>
       </div>
@@ -248,7 +248,7 @@ export function NewExamForm({
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-text-secondary">
-          O envio inicia extração e adaptação mantendo revisão humana obrigatória.
+          O envio inicia extração das questões.
         </p>
         <Button
           type="submit"

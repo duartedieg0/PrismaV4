@@ -5,7 +5,7 @@ const features = [
   {
     icon: Timer,
     title: "Economia de tempo",
-    description: "Reduza de horas para minutos o tempo gasto adaptando avaliações. Mais tempo para o que importa: ensinar.",
+    description: "Reduza o esforço e utiliza IA como ferramenta para sugestão de adaptação. Mais tempo para o que importa: ensinar.",
     highlight: true,
   },
   {
@@ -17,13 +17,13 @@ const features = [
   {
     icon: Layers,
     title: "Múltiplas necessidades",
-    description: "TDAH, Dislexia, TEA, Deficiência Visual e mais — gere adaptações específicas para cada necessidade.",
+    description: "TDAH, Dislexia, TEA e mais — gere adaptações específicas para cada necessidade.",
     highlight: false,
   },
   {
     icon: UserCheck,
     title: "Revisão humana",
-    description: "A IA sugere, mas a decisão final é sempre sua. Revise, ajuste e aprove cada adaptação antes de usar.",
+    description: "Os agentes de IA utilizam documentos de ensino e feedback constante na plataforma, mas a decisão final é sempre sua. Revise, ajuste e aprove cada adaptação.",
     highlight: false,
   },
 ];

@@ -17,7 +17,7 @@ const steps = [
     number: "3",
     icon: ClipboardCheck,
     title: "Revise e copie",
-    description: "Revise as adaptações sugeridas, ajuste conforme necessário e exporte o resultado.",
+    description: "Revise as adaptações sugeridas, ajuste conforme necessário e copie o resultado.",
   },
 ];
 

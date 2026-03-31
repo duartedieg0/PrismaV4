@@ -52,7 +52,7 @@ export default async function ExtractionPage({ params }: ExtractionPageProps) {
   return (
     <TeacherShell
       title="Revisão da extração"
-      description="Valide as questões extraídas e confirme as respostas corretas antes de enviar a prova para adaptação."
+      description="Confirme as respostas corretas antes de enviar a prova para adaptação."
       activeNav="results"
       breadcrumbs={[
         { label: "Inicio", href: "/" },

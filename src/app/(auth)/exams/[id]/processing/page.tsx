@@ -81,7 +81,7 @@ export default async function ProcessingPage({ params }: ProcessingPageProps) {
   return (
     <TeacherShell
       title="Processamento da prova"
-      description="O sistema está acompanhando extração, análise e adaptação. Esta tela mantém o professor orientado durante o andamento."
+      description="Nosso Agente de IA especialista está analisando o enunciado e alternativas das questões."
       activeNav="results"
       breadcrumbs={[
         { label: "Inicio", href: "/" },

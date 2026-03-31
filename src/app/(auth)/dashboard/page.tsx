@@ -50,7 +50,7 @@ export default async function DashboardPage(_: StaticPageProps) {
   return (
     <TeacherShell
       title="Dashboard"
-      description="Acompanhe o status das provas, retome revisões pendentes e abra novas adaptações a partir da mesma área de trabalho."
+      description="Acompanhe o status das provas, retome revisões pendentes e abra novas adaptações."
       activeNav="dashboard"
       primaryAction={{ label: "Nova Prova", href: "/exams/new", ariaLabel: "Nova adaptação" }}
       breadcrumbs={[

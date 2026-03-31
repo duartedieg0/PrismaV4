@@ -15,10 +15,10 @@ export function FinalCta() {
 
       <div className="container-narrow relative flex flex-col items-center gap-6 text-center">
         <h2 className="text-2xl font-extrabold tracking-tight text-text-inverse sm:text-3xl lg:text-4xl">
-          Comece a adaptar suas avaliações hoje
+          Como a Inteligencia Artifical atua no processo de adaptação?
         </h2>
         <p className="max-w-lg text-lg text-white/70">
-          Entre com sua conta e transforme sua rotina de adaptação sem abrir mão da revisão humana.
+          Possuimos um conjunto de critérios neurocientíficos estabelecidos pelas principais instituições da área no mundo. Alem destas instruções, nosso modelo é atualizado pela própria plataforma através dos ciclos de melhorias.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2">
           <Link href="/login">
@@ -37,7 +37,7 @@ export function FinalCta() {
           </Link>
         </div>
         <p className="text-sm text-white/40">
-          Sem cartão de crédito · Gratuito para testar · Cancele quando quiser
+           Gratuito para Testar · Versão Beta
         </p>
       </div>
     </section>

@@ -17,9 +17,6 @@ export function DashboardHeader({ teacherName, stats }: DashboardHeaderProps) {
         <h2 className="font-display text-2xl font-bold text-text-primary">
           Olá, {teacherName}
         </h2>
-        <p className="text-sm text-text-secondary">
-          Acompanhe suas provas e inicie novas adaptações a partir desta área de trabalho.
-        </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

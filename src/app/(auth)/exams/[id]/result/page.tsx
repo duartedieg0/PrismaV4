@@ -173,7 +173,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
   return (
     <TeacherShell
       title="Resultado da adaptação"
-      description="Revise a versão final por apoio, copie conteúdos prontos e registre feedback para o ciclo de melhoria."
+      description="Revise a versão final por apoio, copie e registre feedback para o ciclo de melhoria."
       activeNav="results"
       primaryAction={{ label: "Nova Prova", href: "/exams/new", ariaLabel: "Nova adaptação" }}
       breadcrumbs={[

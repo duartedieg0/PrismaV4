@@ -9,12 +9,12 @@ export function PublicHero() {
         {/* Left: Copy */}
         <div className="flex flex-col gap-6">
           <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-4xl lg:text-5xl">
-            Adapte avaliações em minutos, não horas.
+            Diminua sobrecarga de trabalho, utilizando IA.
           </h1>
           <p className="max-w-[540px] text-lg leading-relaxed text-text-secondary">
-            O Adapte Minha Prova usa inteligência artificial para adaptar provas e avaliações
+            O projeto Prisma usa inteligência artificial para adaptar provas e avaliações
             para estudantes com necessidades educacionais específicas — mantendo o rigor
-            pedagógico que você exige.
+            pedagógico.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link href="/login">
@@ -34,7 +34,7 @@ export function PublicHero() {
         <div className="flex justify-center lg:justify-end">
           <BrowserFrame className="w-full max-w-lg animate-fade-in [transform:perspective(1200px)_rotateY(-2deg)]">
             <div className="flex h-64 items-center justify-center bg-surface-muted text-text-muted text-sm">
-              Screenshot do produto (placeholder)
+              
             </div>
           </BrowserFrame>
         </div>

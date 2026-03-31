@@ -13,10 +13,8 @@ export default function PublicHomePage() {
       <PublicNavbar />
       <main>
         <PublicHero />
-        <TrustStrip />
         <FlowSection />
         <BenefitsSection />
-        <PublicFaq />
         <FinalCta />
       </main>
       <PublicFooter />

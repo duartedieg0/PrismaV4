@@ -32,7 +32,7 @@ export default async function NewExamPage() {
   return (
     <TeacherShell
       title="Nova adaptação"
-      description="Configure a prova, escolha os apoios pedagógicos e envie o PDF sem sair do fluxo guiado."
+      description="Início"
       activeNav="new-exam"
       breadcrumbs={[
         { label: "Inicio", href: "/" },

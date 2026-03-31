@@ -95,7 +95,7 @@ export function ExtractionReview({
         <div className="flex flex-col gap-1">
           <strong className="text-base font-semibold text-text-primary">Revisão humana das respostas</strong>
           <p className="text-sm text-text-secondary">
-            Confirme a resposta correta de cada questão para liberar a etapa de adaptação.
+            Esta etapa garante que a alternativa correta se mantenha na questão adaptada.
           </p>
         </div>
       </div>

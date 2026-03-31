@@ -43,10 +43,7 @@ export default function LoginPage() {
           {/* Feature list */}
           <ul className="flex w-full max-w-sm flex-col gap-3">
             {[
-              "Adapte provas em minutos, não horas",
-              "IA especializada em inclusão educacional",
-              "Você mantém o controle de cada adaptação",
-              "Suporte a TDAH, dislexia, TEA e mais",
+ 
             ].map((feature) => (
               <li key={feature} className="flex items-start gap-3">
                 <svg
@@ -65,7 +62,7 @@ export default function LoginPage() {
           </ul>
 
           <p className="max-w-xs text-center text-sm text-brand-300">
-            Mais de 2.500 professores já estão adaptando suas avaliações com IA.
+            Inteligencia Artificial para Educação Inclusiva.
           </p>
         </div>
       </div>
