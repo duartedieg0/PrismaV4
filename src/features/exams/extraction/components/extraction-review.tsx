@@ -46,6 +46,22 @@ export function ExtractionReview({
   }
 
   async function handleSubmit() {
+    const firstUnansweredObjective = questions.find(
+      (q) => q.questionType === "objective" && !answers[q.id]?.trim(),
+    );
+
+    if (firstUnansweredObjective) {
+      toast.error(
+        `Selecione a alternativa correta da questão ${firstUnansweredObjective.orderNum} antes de continuar.`,
+        { description: "Questões de múltipla escolha exigem que a alternativa correta seja marcada." },
+      );
+      questionRefs.current[firstUnansweredObjective.id]?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {

@@ -100,6 +100,20 @@ export async function POST(request: Request, { params }: RouteContext) {
     return apiValidationError(parsed.error);
   }
 
+  const { data: examQuestions } = await supabase
+    .from("questions")
+    .select("id, question_type")
+    .eq("exam_id", examId);
+
+  const answersMap = new Map(parsed.data.answers.map((a) => [a.questionId, a.correctAnswer]));
+  const unansweredObjective = (examQuestions ?? []).find(
+    (q) => q.question_type === "objective" && !answersMap.get(q.id)?.trim(),
+  );
+
+  if (unansweredObjective) {
+    return apiError("VALIDATION_ERROR", "Todas as questões de múltipla escolha precisam ter uma alternativa correta selecionada.", 422);
+  }
+
   for (const answer of parsed.data.answers) {
     if (!answer.correctAnswer.trim()) {
       continue;
