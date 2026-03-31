@@ -35,6 +35,10 @@ export default async function ProcessingPage({ params }: ProcessingPageProps) {
     redirect(`/exams/${examId}/extraction`);
   }
 
+  if (exam.status === "completed") {
+    redirect(`/exams/${examId}/result`);
+  }
+
   const { data: questions } = await supabase
     .from("questions")
     .select("id")
@@ -44,20 +48,34 @@ export default async function ProcessingPage({ params }: ProcessingPageProps) {
 
   let totalAdaptations = 0;
   let completedAdaptations = 0;
+  let questionsCompleted = 0;
 
   if (questionIds.length > 0) {
-    const { count: total } = await supabase
-      .from("adaptations")
-      .select("*", { count: "exact", head: true })
-      .in("question_id", questionIds);
-    const { count: completed } = await supabase
-      .from("adaptations")
-      .select("*", { count: "exact", head: true })
-      .in("question_id", questionIds)
-      .eq("status", "completed");
+    const [{ count: total }, { count: completed }, { data: adaptationRows }] = await Promise.all([
+      supabase
+        .from("adaptations")
+        .select("*", { count: "exact", head: true })
+        .in("question_id", questionIds),
+      supabase
+        .from("adaptations")
+        .select("*", { count: "exact", head: true })
+        .in("question_id", questionIds)
+        .eq("status", "completed"),
+      supabase
+        .from("adaptations")
+        .select("question_id, status")
+        .in("question_id", questionIds),
+    ]);
 
     totalAdaptations = total ?? 0;
     completedAdaptations = completed ?? 0;
+
+    const grouped = new Map<string, boolean>();
+    for (const row of adaptationRows ?? []) {
+      const current = grouped.get(row.question_id) ?? true;
+      grouped.set(row.question_id, current && row.status === "completed");
+    }
+    questionsCompleted = [...grouped.values()].filter(Boolean).length;
   }
 
   return (
@@ -78,6 +96,7 @@ export default async function ProcessingPage({ params }: ProcessingPageProps) {
           total: totalAdaptations,
           completed: completedAdaptations,
           questionsCount: questionIds.length,
+          questionsCompleted,
         }}
         status={exam.status}
       />
