@@ -1,6 +1,8 @@
 # Spec: Thread de Suporte com Agente Consultor TEA — V1
 
 > Referência: `docs/plans/2026-04-01-PRD-tea-support-thread.md`
+>
+> **Nota**: Este spec supersede o PRD e o initiative doc nas decisões divergentes (embedding, working memory, naming). As decisões aqui são as finais.
 
 ---
 
@@ -89,11 +91,12 @@ Configurável via tabela `ai_models` (padrão existente do projeto). Pode usar m
 ### Tools do agente
 
 - `vectorQueryTool` — busca na knowledge base
-- `registerRuntimeEventTool` — registra eventos de observabilidade
+
+> Nota: eventos de observabilidade são registrados na camada de API (route handlers), não como tool do agente. Isso garante que eventos sejam sempre emitidos, independente do comportamento do LLM.
 
 ### Geração de título
 
-Após a primeira resposta, o agente gera um título curto para a thread. O título é salvo na tabela `consultant_threads` do Supabase.
+Após a primeira resposta, o agente gera um título curto para a thread. O título é salvo na tabela `consultant_threads` do Supabase. Fallback: se a geração de título falhar, usa a primeira mensagem do professor truncada em 80 caracteres.
 
 ### Guardrails
 
@@ -123,9 +126,9 @@ RLS: professor só vê/deleta suas próprias threads.
 | Método | Rota | Ação |
 |--------|------|------|
 | `POST` | `/api/teacher/threads` | Cria thread no Supabase + no Mastra. Retorna `threadId` |
-| `GET` | `/api/teacher/threads` | Lista threads do professor (paginada, ordenada por `updated_at` desc). Filtra por `agent_slug` |
+| `GET` | `/api/teacher/threads` | Lista threads do professor (cursor-based, 20 por página, ordenada por `updated_at` desc). Filtra por `agent_slug` |
 | `GET` | `/api/teacher/threads/[id]` | Retorna metadata + histórico de mensagens (via Mastra Memory) |
-| `POST` | `/api/teacher/threads/[id]/messages` | Envia mensagem, retorna resposta do agente via streaming |
+| `POST` | `/api/teacher/threads/[id]/messages` | Envia mensagem (max 2000 chars), retorna resposta do agente via streaming |
 | `DELETE` | `/api/teacher/threads/[id]` | Deleta thread no Supabase + no Mastra |
 
 ### Streaming
@@ -140,7 +143,7 @@ RLS: professor só vê/deleta suas próprias threads.
 
 ### Fluxo de delete
 
-1. `DELETE /threads/[id]` → verifica ownership via RLS → deleta no Supabase → deleta thread/mensagens no Mastra
+1. `DELETE /threads/[id]` → verifica ownership via RLS → deleta thread/mensagens no Mastra → deleta no Supabase. Ordem: Mastra primeiro, Supabase depois (se Mastra falhar, não ficam orphans no LibSQL).
 
 ### Runtime events
 
@@ -197,7 +200,13 @@ Tailwind CSS 4 + tokens do projeto. Markdown rendering via `react-markdown` ou s
 
 ### Runtime events
 
-Extensão do sistema existente, nova stage `consultant`:
+O sistema de observabilidade atual (`RuntimeEventRecord`) é centrado em exams (`examId` obrigatório, stages de extraction/adaptation). Para suportar eventos de consultant, o sistema precisa ser **generalizado**:
+
+- Refatorar `RuntimeEventRecord` para aceitar metadata flexível (union type exam-centric | consultant-centric)
+- Adicionar `consultant` ao `RUNTIME_STAGES`
+- Campos consultant-specific: `threadId`, `agentSlug`, `teacherId` (sem `examId`)
+
+Nova stage `consultant`:
 
 | Evento | Quando |
 |--------|--------|
@@ -266,3 +275,15 @@ Caminho crítico: Épico 1 → Épico 2 → Épico 3 → Épico 4
 - Interface responsiva funciona em mobile
 - Zero vazamento de dados identificáveis de alunos nas threads
 - Navegação "Agentes IA de Suporte" preparada para múltiplos agentes
+
+---
+
+## Novas dependências
+
+| Pacote | Propósito |
+|--------|-----------|
+| `@mastra/memory` | Message history para threads do agente |
+| `react-markdown` | Renderização Markdown nas respostas do agente |
+| `remark-gfm` | Suporte a tabelas e listas de tarefas no Markdown |
+
+Pacotes existentes a verificar compatibilidade: `@mastra/core` deve suportar agents com memory + RAG.
