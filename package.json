@@ -16,7 +16,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:a11y": "vitest run --config vitest.a11y.config.mts",
-    "test:e2e": "npm run build && playwright install chromium firefox && playwright test"
+    "test:e2e": "npm run build && playwright install chromium firefox && playwright test",
+    "rag:ingest": "tsx src/mastra/rag/ingest.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.47",
