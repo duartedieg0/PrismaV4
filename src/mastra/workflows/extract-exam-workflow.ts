@@ -1,11 +1,11 @@
 import { z } from "zod";
 import { createStep, createWorkflow } from "@mastra/core/workflows";
 import {
-  createRuntimeExecutionMetadata,
+  createExamExecutionMetadata,
   createRuntimeFailure,
 } from "@/mastra/contracts/runtime-contracts";
 import { normalizeExtractionPayload } from "@/features/exams/extraction/normalization";
-import { createRuntimeEventRecord } from "@/mastra/observability/runtime-events";
+import { createExamEventRecord } from "@/mastra/observability/runtime-events";
 import {
   buildExtractionPrompt,
   EXTRACTION_PROMPT_VERSION,
@@ -104,7 +104,7 @@ type ExtractionWorkflowDependencies = {
     warnings: string[];
     questionsCount: number;
   }>;
-  registerEvent?(event: ReturnType<typeof createRuntimeEventRecord>): Promise<void> | void;
+  registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
 
 export function createExtractExamWorkflow(
@@ -114,14 +114,14 @@ export function createExtractExamWorkflow(
     await dependencies.registerEvent?.(
       {
         category: "workflow",
-        event: input.event as ReturnType<typeof createRuntimeEventRecord>["event"],
+        event: input.event as ReturnType<typeof createExamEventRecord>["event"],
         status: input.status,
         traceId: input.traceId,
         correlationId: input.correlationId,
-        examId: input.examId,
+        examId: input.examId!,
         questionId: input.questionId,
         supportId: input.supportId,
-        stage: input.stage,
+        stage: input.stage as import("@/mastra/contracts/runtime-contracts").ExamStage,
         model: input.model,
         agentId: input.agentId,
         promptVersion: input.promptVersion,
@@ -144,7 +144,7 @@ export function createExtractExamWorkflow(
       const modelRecord = resolveExtractionModel({
         models,
       });
-      const baseMetadata = createRuntimeExecutionMetadata({
+      const baseMetadata = createExamExecutionMetadata({
         correlationId: inputData.correlationId,
         examId: inputData.examId,
         stage: "extraction",
@@ -158,7 +158,7 @@ export function createExtractExamWorkflow(
       };
 
       await registerRuntimeEventTool.execute?.({
-        ...createRuntimeEventRecord(metadata, "started"),
+        ...createExamEventRecord(metadata, "started"),
       }, {});
 
       const payload = await dependencies.runExtractionAgent({
@@ -203,7 +203,7 @@ export function createExtractExamWorkflow(
         }, {});
 
         await registerRuntimeEventTool.execute?.({
-          ...createRuntimeEventRecord(inputData.metadata, "failed", failure),
+          ...createExamEventRecord(inputData.metadata, "failed", failure),
         }, {});
 
         return {
@@ -222,7 +222,7 @@ export function createExtractExamWorkflow(
       }, {});
 
       await registerRuntimeEventTool.execute?.({
-        ...createRuntimeEventRecord(inputData.metadata, "completed"),
+        ...createExamEventRecord(inputData.metadata, "completed"),
       }, {});
 
       if (!persisted || !("warnings" in persisted) || !("questionsCount" in persisted)) {

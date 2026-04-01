@@ -1,6 +1,6 @@
 import type { AdaptationStatus } from "@/domains/adaptations/contracts";
 import type { ExamStatus } from "@/domains/exams/contracts";
-import type { RuntimeExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
+import type { ExamExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
 
 export interface AdaptationWorkflowInput {
   examId: string;
@@ -12,7 +12,7 @@ export interface AdaptationWorkflowInput {
 
 export interface AdaptationWorkflowSuccess {
   outcome: "success";
-  metadata: RuntimeExecutionMetadata;
+  metadata: ExamExecutionMetadata;
   status: Extract<ExamStatus, "completed">;
   adaptationStatus: Extract<AdaptationStatus, "completed">;
   processedQuestions: number;
@@ -21,7 +21,7 @@ export interface AdaptationWorkflowSuccess {
 
 export interface AdaptationWorkflowFailure {
   outcome: "error";
-  metadata: RuntimeExecutionMetadata;
+  metadata: ExamExecutionMetadata;
   status: Extract<ExamStatus, "error">;
   failure: RuntimeFailure;
 }

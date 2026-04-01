@@ -1,5 +1,5 @@
 import type { ExamStatus } from "@/domains/exams/contracts";
-import type { RuntimeExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
+import type { ExamExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
 
 export interface ExtractionWorkflowInput {
   examId: string;
@@ -10,7 +10,7 @@ export interface ExtractionWorkflowInput {
 
 export interface ExtractionWorkflowSuccess {
   outcome: "success";
-  metadata: RuntimeExecutionMetadata;
+  metadata: ExamExecutionMetadata;
   status: Extract<ExamStatus, "awaiting_answers">;
   warnings: string[];
   questionsCount: number;
@@ -18,7 +18,7 @@ export interface ExtractionWorkflowSuccess {
 
 export interface ExtractionWorkflowFailure {
   outcome: "error";
-  metadata: RuntimeExecutionMetadata;
+  metadata: ExamExecutionMetadata;
   status: Extract<ExamStatus, "error">;
   failure: RuntimeFailure;
 }

@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { createRuntimeExecutionMetadata, createRuntimeFailure } from "@/mastra/contracts/runtime-contracts";
+import { createExamExecutionMetadata, createRuntimeFailure } from "@/mastra/contracts/runtime-contracts";
 import { createRuntimeLogEntry } from "@/mastra/observability/runtime-logger";
 import { createRequestContext } from "@/services/runtime/request-context";
 
 describe("mastra runtime logger", () => {
   it("builds structured logs with runtime metadata", () => {
-    const metadata = createRuntimeExecutionMetadata({
+    const metadata = createExamExecutionMetadata({
       correlationId: "phase7-log",
       examId: "exam-1",
       stage: "extraction",
@@ -32,7 +32,7 @@ describe("mastra runtime logger", () => {
   });
 
   it("marks failures with stable runtime error information", () => {
-    const metadata = createRuntimeExecutionMetadata({
+    const metadata = createExamExecutionMetadata({
       correlationId: "phase7-log",
       examId: "exam-2",
       stage: "adaptation",

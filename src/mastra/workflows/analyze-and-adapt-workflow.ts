@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createStep, createWorkflow } from "@mastra/core/workflows";
-import { createRuntimeExecutionMetadata, createRuntimeFailure } from "@/mastra/contracts/runtime-contracts";
-import { createRuntimeEventRecord } from "@/mastra/observability/runtime-events";
+import { createExamExecutionMetadata, createRuntimeFailure } from "@/mastra/contracts/runtime-contracts";
+import { createExamEventRecord } from "@/mastra/observability/runtime-events";
 import { buildAdaptationPrompt, ADAPTATION_PROMPT_VERSION } from "@/mastra/prompts/adaptation-prompt";
 import { buildBloomPrompt, BLOOM_PROMPT_VERSION } from "@/mastra/prompts/bloom-prompt";
 import { buildBnccPrompt, BNCC_PROMPT_VERSION } from "@/mastra/prompts/bncc-prompt";
@@ -98,7 +98,7 @@ type AnalyzeAndAdaptDependencies = {
     alternatives: Array<{ label: string; text: string }> | null;
     correctAnswer: string | null;
   }): Promise<AdaptationAgentResult>;
-  registerEvent?(event: ReturnType<typeof createRuntimeEventRecord>): Promise<void> | void;
+  registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
 
 function formatAlternatives(
@@ -176,14 +176,14 @@ export function createAnalyzeAndAdaptWorkflow(
   const registerRuntimeEventTool = createRegisterRuntimeEventTool(async (input) => {
     await dependencies.registerEvent?.({
       category: "workflow",
-      event: input.event as ReturnType<typeof createRuntimeEventRecord>["event"],
+      event: input.event as ReturnType<typeof createExamEventRecord>["event"],
       status: input.status,
       traceId: input.traceId,
       correlationId: input.correlationId,
-      examId: input.examId,
+      examId: input.examId!,
       questionId: input.questionId,
       supportId: input.supportId,
-      stage: input.stage,
+      stage: input.stage as import("@/mastra/contracts/runtime-contracts").ExamStage,
       model: input.model,
       agentId: input.agentId,
       promptVersion: input.promptVersion,
@@ -246,7 +246,7 @@ export function createAnalyzeAndAdaptWorkflow(
         throw new Error("Falha ao carregar o contexto do exame para adaptação.");
       }
 
-      const baseMetadata = createRuntimeExecutionMetadata({
+      const baseMetadata = createExamExecutionMetadata({
         correlationId: inputData.correlationId,
         examId: inputData.examId,
         stage: "adaptation",
@@ -261,7 +261,7 @@ export function createAnalyzeAndAdaptWorkflow(
 
       await registerRuntimeEventTool.execute?.(
         {
-          ...createRuntimeEventRecord(metadata, "started"),
+          ...createExamEventRecord(metadata, "started"),
         },
         {},
       );
@@ -391,7 +391,7 @@ export function createAnalyzeAndAdaptWorkflow(
 
         await registerRuntimeEventTool.execute?.(
           {
-            ...createRuntimeEventRecord(inputData.metadata, "completed"),
+            ...createExamEventRecord(inputData.metadata, "completed"),
           },
           {},
         );
@@ -418,7 +418,7 @@ export function createAnalyzeAndAdaptWorkflow(
         });
         await registerRuntimeEventTool.execute?.(
           {
-            ...createRuntimeEventRecord(inputData.metadata, "failed", failure),
+            ...createExamEventRecord(inputData.metadata, "failed", failure),
           },
           {},
         );

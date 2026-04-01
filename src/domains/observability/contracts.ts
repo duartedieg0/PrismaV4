@@ -6,6 +6,7 @@ export const OBSERVABLE_EVENT_CATEGORIES = [
   "feedback",
   "agent",
   "workflow",
+  "consultant",
   "storage",
   "system",
   "error",
@@ -30,6 +31,10 @@ export const OBSERVABLE_EVENTS = [
   "feedback_saved",
   "agent_evolution_started",
   "agent_evolution_completed",
+  "consultant_thread_created",
+  "consultant_message_sent",
+  "consultant_response_completed",
+  "consultant_response_failed",
 ] as const;
 
 export type ObservableEventName = (typeof OBSERVABLE_EVENTS)[number];
@@ -40,6 +45,7 @@ export interface ObservableEntityIds {
   questionId?: string;
   adaptationId?: string;
   workflowId?: string;
+  threadId?: string;
 }
 
 export interface ObservableEventContext extends ObservableEntityIds {

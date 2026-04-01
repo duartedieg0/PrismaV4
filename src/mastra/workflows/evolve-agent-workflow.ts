@@ -5,10 +5,10 @@ import {
   createEvolutionWorkflowSuccess,
 } from "@/mastra/contracts/evolution-contracts";
 import {
-  createRuntimeExecutionMetadata,
+  createExamExecutionMetadata,
   createRuntimeFailure,
 } from "@/mastra/contracts/runtime-contracts";
-import { createRuntimeEventRecord } from "@/mastra/observability/runtime-events";
+import { createExamEventRecord } from "@/mastra/observability/runtime-events";
 import { EVOLUTION_PROMPT_VERSION, buildEvolutionPrompt } from "@/mastra/prompts/evolution-prompt";
 import type { AiModelRecord } from "@/mastra/providers/model-registry";
 
@@ -96,7 +96,7 @@ type EvolveAgentDependencies = {
   }): Promise<{
     evolutionId: string;
   }>;
-  registerEvent?(event: ReturnType<typeof createRuntimeEventRecord>): Promise<void> | void;
+  registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
 
 export function createEvolveAgentWorkflow(dependencies: EvolveAgentDependencies) {
@@ -106,7 +106,7 @@ export function createEvolveAgentWorkflow(dependencies: EvolveAgentDependencies)
     outputSchema: evolveAgentOutputSchema,
     execute: async ({ inputData }) => {
       const metadata = {
-        ...createRuntimeExecutionMetadata({
+        ...createExamExecutionMetadata({
           correlationId: inputData.correlationId,
           examId: `agent:${inputData.agentId}`,
           stage: "evolution",
@@ -118,7 +118,7 @@ export function createEvolveAgentWorkflow(dependencies: EvolveAgentDependencies)
       };
 
       await dependencies.registerEvent?.(
-        createRuntimeEventRecord(metadata, "started"),
+        createExamEventRecord(metadata, "started"),
       );
 
       try {
@@ -147,7 +147,7 @@ export function createEvolveAgentWorkflow(dependencies: EvolveAgentDependencies)
         });
 
         await dependencies.registerEvent?.(
-          createRuntimeEventRecord(metadata, "completed"),
+          createExamEventRecord(metadata, "completed"),
         );
 
         return createEvolutionWorkflowSuccess({
@@ -168,7 +168,7 @@ export function createEvolveAgentWorkflow(dependencies: EvolveAgentDependencies)
         });
 
         await dependencies.registerEvent?.(
-          createRuntimeEventRecord(metadata, "failed", failure),
+          createExamEventRecord(metadata, "failed", failure),
         );
 
         return createEvolutionWorkflowFailure({

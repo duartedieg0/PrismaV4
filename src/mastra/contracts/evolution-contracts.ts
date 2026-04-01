@@ -1,4 +1,4 @@
-import type { RuntimeExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
+import type { ExamExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
 import type { AiModelRecord } from "@/mastra/providers/model-registry";
 import type { EvolutionFeedbackView } from "@/features/admin/agents/evolution/contracts";
 
@@ -16,7 +16,7 @@ export interface EvolutionWorkflowInput {
 
 export interface EvolutionWorkflowSuccess {
   outcome: "success";
-  metadata: RuntimeExecutionMetadata<"evolution">;
+  metadata: ExamExecutionMetadata<"evolution">;
   evolutionId: string;
   originalPrompt: string;
   suggestedPrompt: string;
@@ -27,7 +27,7 @@ export interface EvolutionWorkflowSuccess {
 
 export interface EvolutionWorkflowFailure {
   outcome: "error";
-  metadata: RuntimeExecutionMetadata<"evolution">;
+  metadata: ExamExecutionMetadata<"evolution">;
   status: "error";
   failure: RuntimeFailure<"evolution">;
 }

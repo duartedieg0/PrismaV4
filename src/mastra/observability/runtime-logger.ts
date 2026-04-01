@@ -1,13 +1,13 @@
 import { createStructuredLogEntry } from "@/services/observability/logger";
 import type { RequestContext } from "@/services/runtime/request-context";
-import type { RuntimeExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
-import { createRuntimeEventRecord } from "@/mastra/observability/runtime-events";
+import type { ExamExecutionMetadata, RuntimeFailure } from "@/mastra/contracts/runtime-contracts";
+import { createExamEventRecord } from "@/mastra/observability/runtime-events";
 
 type RuntimeLogLevel = "info" | "warn" | "error";
 
 export function createRuntimeLogEntry(
   level: RuntimeLogLevel,
-  metadata: RuntimeExecutionMetadata,
+  metadata: ExamExecutionMetadata,
   context: RequestContext,
   message: string,
   failure?: RuntimeFailure,
@@ -18,7 +18,7 @@ export function createRuntimeLogEntry(
       message,
       context,
     }),
-    runtime: createRuntimeEventRecord(
+    runtime: createExamEventRecord(
       metadata,
       failure ? "failed" : level === "warn" ? "completed" : "started",
       failure,

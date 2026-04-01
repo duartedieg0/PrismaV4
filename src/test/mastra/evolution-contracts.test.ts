@@ -4,7 +4,7 @@ import {
   createEvolutionWorkflowInput,
   createEvolutionWorkflowSuccess,
 } from "@/mastra/contracts/evolution-contracts";
-import { createRuntimeExecutionMetadata } from "@/mastra/contracts/runtime-contracts";
+import { createExamExecutionMetadata } from "@/mastra/contracts/runtime-contracts";
 
 describe("evolution workflow contracts", () => {
   it("creates the canonical workflow input for agent evolution", () => {
@@ -46,7 +46,7 @@ describe("evolution workflow contracts", () => {
   });
 
   it("creates success and failure payloads with explicit evolution metadata", () => {
-    const metadata = createRuntimeExecutionMetadata({
+    const metadata = createExamExecutionMetadata({
       correlationId: "phase11",
       examId: "agent:agent-1",
       stage: "evolution",

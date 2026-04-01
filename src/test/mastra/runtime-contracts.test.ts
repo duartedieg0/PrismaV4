@@ -8,13 +8,13 @@ import {
   createExtractionWorkflowSuccess,
 } from "@/mastra/contracts/extraction-contracts";
 import {
-  createRuntimeExecutionMetadata,
+  createExamExecutionMetadata,
   createRuntimeFailure,
 } from "@/mastra/contracts/runtime-contracts";
 
 describe("mastra runtime contracts", () => {
   it("creates stable execution metadata with normalized correlation data", () => {
-    const metadata = createRuntimeExecutionMetadata({
+    const metadata = createExamExecutionMetadata({
       correlationId: " exam:phase7 ",
       examId: "exam-1",
       stage: "extraction",
@@ -43,7 +43,7 @@ describe("mastra runtime contracts", () => {
       retryable: false,
     });
     const workflowFailure = createExtractionWorkflowFailure({
-      metadata: createRuntimeExecutionMetadata({
+      metadata: createExamExecutionMetadata({
         correlationId: "phase7",
         examId: "exam-2",
         stage: "extraction",
@@ -76,7 +76,7 @@ describe("mastra runtime contracts", () => {
       correlationId: "phase7-adaptation",
     });
     const extractionSuccess = createExtractionWorkflowSuccess({
-      metadata: createRuntimeExecutionMetadata({
+      metadata: createExamExecutionMetadata({
         correlationId: "phase7-extraction",
         examId: "exam-3",
         stage: "extraction",

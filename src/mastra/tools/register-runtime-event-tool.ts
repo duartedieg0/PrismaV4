@@ -5,9 +5,12 @@ import { RUNTIME_STAGES } from "@/mastra/contracts/runtime-contracts";
 const runtimeEventInputSchema = z.object({
   traceId: z.string(),
   correlationId: z.string(),
-  examId: z.string(),
+  examId: z.string().optional(),
   questionId: z.string().optional(),
   supportId: z.string().optional(),
+  threadId: z.string().optional(),
+  agentSlug: z.string().optional(),
+  teacherId: z.string().optional(),
   stage: z.enum(RUNTIME_STAGES),
   model: z.string(),
   agentId: z.string(),
