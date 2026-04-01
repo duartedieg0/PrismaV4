@@ -38,17 +38,26 @@ const essayAdaptationSchema = z.object({
   adaptedContent: z.string().min(1),
 });
 
+function normalizeLabel(label: string): string {
+  return label.trim().replace(/\)$/, "").toUpperCase();
+}
+
 function mapAdaptedAlternatives(
   alternatives: QuestionAlternative[],
   adaptedAlternatives: Array<{ originalLabel: string; text: string }>,
   correctAnswer: string | null,
 ): AdaptedAlternative[] {
   const originalsByLabel = new Map(
-    alternatives.map((alt) => [alt.label, alt]),
+    alternatives.map((alt) => [normalizeLabel(alt.label), alt]),
   );
 
+  const normalizedCorrectAnswer = correctAnswer
+    ? normalizeLabel(correctAnswer)
+    : null;
+
   const mapped = adaptedAlternatives.map((adapted, index) => {
-    const original = originalsByLabel.get(adapted.originalLabel);
+    const normalizedAdaptedLabel = normalizeLabel(adapted.originalLabel);
+    const original = originalsByLabel.get(normalizedAdaptedLabel);
     if (!original) {
       throw new Error(
         `O agente retornou a alternativa "${adapted.originalLabel}" que não existe na questão original.`,
@@ -56,16 +65,16 @@ function mapAdaptedAlternatives(
     }
     return {
       id: `alt-${index}`,
-      label: adapted.originalLabel,
+      label: original.label,
       originalText: original.text,
       adaptedText: adapted.text.trim(),
-      isCorrect: correctAnswer === adapted.originalLabel,
+      isCorrect: normalizedCorrectAnswer === normalizedAdaptedLabel,
       position: index,
     };
   });
 
   if (
-    correctAnswer &&
+    normalizedCorrectAnswer &&
     !mapped.some((alt) => alt.isCorrect)
   ) {
     throw new Error(

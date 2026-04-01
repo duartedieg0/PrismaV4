@@ -15,6 +15,7 @@ const persistAdaptationInputSchema = z.object({
   questionId: z.string(),
   supportId: z.string(),
   status: z.enum(["pending", "processing", "completed", "error"]),
+  errorMessage: z.string().nullable().optional(),
   agentVersion: z.number().nullable().optional(),
   promptVersion: z.string().nullable().optional(),
   bnccSkills: z.array(z.string()).nullable().optional(),

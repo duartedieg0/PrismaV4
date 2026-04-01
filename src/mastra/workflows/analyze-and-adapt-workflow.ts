@@ -76,6 +76,7 @@ type AnalyzeAndAdaptDependencies = {
     bloomAnalysis?: string | null;
     adaptedContent?: string | null;
     adaptedAlternatives?: AdaptedAlternative[] | null;
+    errorMessage?: string | null;
   }): Promise<void>;
   updateExamStatus(input: {
     examId: string;
@@ -357,13 +358,14 @@ export function createAnalyzeAndAdaptWorkflow(
                 },
                 {},
               );
-            } catch {
+            } catch (adaptationError) {
               await persistAdaptationsTool.execute?.(
                 {
                   examId: inputData.context.exam.id,
                   questionId: question.id,
                   supportId: support.id,
                   status: "error",
+                  errorMessage: adaptationError instanceof Error ? adaptationError.message : "Erro desconhecido",
                   agentVersion: support.agentVersion,
                   promptVersion: `${ADAPTATION_PROMPT_VERSION}/agent-v${support.agentVersion}`,
                   bnccSkills: bncc.skills,

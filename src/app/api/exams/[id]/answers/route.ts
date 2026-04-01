@@ -224,6 +224,7 @@ export async function POST(request: Request, { params }: RouteContext) {
             if (input.adaptedAlternatives !== undefined) {
               patch.adapted_alternatives = input.adaptedAlternatives;
             }
+            if (input.errorMessage !== undefined) patch.error_message = input.errorMessage;
 
             await bgSupabase
               .from("adaptations")
