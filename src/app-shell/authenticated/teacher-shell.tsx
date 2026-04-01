@@ -4,13 +4,13 @@ import { Logo } from "@/design-system/components/logo";
 import { Breadcrumbs } from "@/design-system/components/breadcrumbs";
 import { PageHeader } from "@/design-system/components/page-header";
 import { Button } from "@/design-system/components/button";
-import { LayoutGrid, FilePlus, LogOut, User } from "lucide-react";
+import { LayoutGrid, FilePlus, LogOut, User, Bot } from "lucide-react";
 
 type TeacherShellProps = Readonly<{
   title: string;
   breadcrumbs: { label: string; href: string }[];
   description?: string;
-  activeNav?: "dashboard" | "new-exam" | "results";
+  activeNav?: "dashboard" | "new-exam" | "results" | "support";
   primaryAction?: {
     label: string;
     href: string;
@@ -26,6 +26,7 @@ type TeacherShellProps = Readonly<{
 const navigationItems = [
   { id: "dashboard" as const, label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
   { id: "new-exam" as const, label: "Nova Prova", href: "/exams/new", icon: FilePlus },
+  { id: "support" as const, label: "Agentes IA de Suporte", href: "/support", icon: Bot },
 ];
 
 export function TeacherShell({
