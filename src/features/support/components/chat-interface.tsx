@@ -1,7 +1,8 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { useEffect, useRef } from "react";
+import { DefaultChatTransport } from "ai";
+import { useEffect, useMemo, useRef } from "react";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import { Loader2 } from "lucide-react";
@@ -14,11 +15,18 @@ type ChatInterfaceProps = {
 export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, isLoading, append } =
-    useChat({
-      api: `/api/teacher/threads/${threadId}/messages`,
-      body: { threadId },
-    });
+  const transport = useMemo(
+    () =>
+      new DefaultChatTransport({
+        api: `/api/teacher/threads/${threadId}/messages`,
+      }),
+    [threadId],
+  );
+
+  const { messages, status, sendMessage } =
+    useChat({ transport });
+
+  const isLoading = status === "submitted" || status === "streaming";
 
   // Auto-scroll
   useEffect(() => {
@@ -29,7 +37,15 @@ export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
   }, [messages]);
 
   function handleSend(content: string) {
-    append({ role: "user", content });
+    sendMessage({ text: content });
+  }
+
+  // Extrair conteúdo textual das partes da mensagem
+  function getMessageContent(message: (typeof messages)[number]): string {
+    return message.parts
+      .filter((p): p is { type: "text"; text: string } => p.type === "text")
+      .map((p) => p.text)
+      .join("");
   }
 
   return (
@@ -44,7 +60,7 @@ export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
             <ChatMessage
               key={message.id}
               role={message.role as "user" | "assistant"}
-              content={message.content}
+              content={getMessageContent(message)}
             />
           ))}
           {isLoading && messages[messages.length - 1]?.role === "user" && (

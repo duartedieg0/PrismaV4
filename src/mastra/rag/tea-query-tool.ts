@@ -11,9 +11,8 @@ export function createTeaQueryTool() {
     vectorStoreName: "tea-knowledge-base",
     indexName: TEA_INDEX_NAME,
     vectorStore,
-    embeddingModel,
+    model: embeddingModel,
     description:
       "Busca informações sobre TEA (Transtorno do Espectro Autista), adaptação de avaliações, legislação brasileira de educação inclusiva e boas práticas pedagógicas na base de conhecimento.",
-    topK: 5,
   });
 }

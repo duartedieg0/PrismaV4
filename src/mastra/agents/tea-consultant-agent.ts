@@ -11,6 +11,7 @@ const MASTRA_DB_TOKEN = process.env.MASTRA_DB_TOKEN ?? "";
 
 export function createTeaConsultantAgent(model: ResolvedMastraModel) {
   const storage = new LibSQLStore({
+    id: "tea-consultant-storage",
     url: MASTRA_DB_URL,
     authToken: MASTRA_DB_TOKEN || undefined,
   });

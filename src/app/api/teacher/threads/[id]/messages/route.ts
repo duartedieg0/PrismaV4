@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { after } from "next/server";
+import {
+  createUIMessageStream,
+  createUIMessageStreamResponse,
+} from "ai";
 import { withTeacherRoute } from "@/features/support/with-teacher-route";
 import { createTeaConsultantAgent } from "@/mastra/agents/tea-consultant-agent";
 import { generateThreadTitle } from "@/features/support/thread-title";
@@ -68,10 +72,34 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
   // Criar agente
   const agent = createTeaConsultantAgent(model);
 
-  // Stream da resposta
+  // Stream da resposta via Mastra → UIMessageStream para useChat
   const result = await agent.stream(parsed.data.content, {
-    threadId,
-    resourceId: userId,
+    memory: {
+      thread: threadId,
+      resource: userId,
+    },
+  });
+
+  const stream = createUIMessageStream({
+    execute: async ({ writer }) => {
+      const textId = "text-0";
+      writer.write({ type: "start" });
+      writer.write({ type: "text-start", id: textId });
+
+      const reader = result.textStream.getReader();
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          writer.write({ type: "text-delta", id: textId, delta: value });
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+      writer.write({ type: "text-end", id: textId });
+      writer.write({ type: "finish" });
+    },
   });
 
   // Gerar título após primeira mensagem + atualizar updated_at (em background)
@@ -107,5 +135,5 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
     }
   });
 
-  return result.toDataStreamResponse();
+  return createUIMessageStreamResponse({ stream });
 });

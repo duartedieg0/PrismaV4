@@ -7,7 +7,8 @@ const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL ?? "text-embedding-3-small";
 
 export function createVectorStore() {
   return new LibSQLVector({
-    connectionUrl: VECTOR_DB_URL,
+    id: "tea-vector-store",
+    url: VECTOR_DB_URL,
     authToken: VECTOR_DB_TOKEN || undefined,
   });
 }
