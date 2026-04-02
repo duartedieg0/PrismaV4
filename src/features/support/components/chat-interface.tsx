@@ -21,7 +21,6 @@ type HistoryMessage = {
 };
 
 export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
   const [initialMessages, setInitialMessages] = useState<UIMessage[] | null>(
     null,
   );
@@ -55,6 +54,31 @@ export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
     loadHistory();
   }, [threadId]);
 
+  // Mostrar loading enquanto carrega o histórico
+  if (initialMessages === null) {
+    return (
+      <div className="flex h-[calc(100vh-14rem)] items-center justify-center">
+        <div className="flex items-center gap-2 text-sm text-text-muted">
+          <Loader2 className="h-4 w-4 animate-spin" />
+          Carregando conversa...
+        </div>
+      </div>
+    );
+  }
+
+  // Só renderiza o chat depois que o histórico carregou
+  return <ChatReady threadId={threadId} initialMessages={initialMessages} />;
+}
+
+function ChatReady({
+  threadId,
+  initialMessages,
+}: {
+  threadId: string;
+  initialMessages: UIMessage[];
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
@@ -65,7 +89,7 @@ export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
 
   const { messages, status, sendMessage } = useChat({
     transport,
-    messages: initialMessages ?? undefined,
+    messages: initialMessages,
   });
 
   const isLoading = status === "submitted" || status === "streaming";
@@ -88,18 +112,6 @@ export function ChatInterface({ threadId, agentSlug }: ChatInterfaceProps) {
       .filter((p): p is { type: "text"; text: string } => p.type === "text")
       .map((p) => p.text)
       .join("");
-  }
-
-  // Mostrar loading enquanto carrega o histórico
-  if (initialMessages === null) {
-    return (
-      <div className="flex h-[calc(100vh-14rem)] items-center justify-center">
-        <div className="flex items-center gap-2 text-sm text-text-muted">
-          <Loader2 className="h-4 w-4 animate-spin" />
-          Carregando conversa...
-        </div>
-      </div>
-    );
   }
 
   return (
