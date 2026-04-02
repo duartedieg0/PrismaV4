@@ -4,16 +4,21 @@ import {
   createUIMessageStream,
   createUIMessageStreamResponse,
 } from "ai";
+import { LibSQLStore } from "@mastra/libsql";
 import { withTeacherRoute } from "@/features/support/with-teacher-route";
 import { createTeaConsultantAgent } from "@/mastra/agents/tea-consultant-agent";
 import { generateThreadTitle } from "@/features/support/thread-title";
 import { createMastraModel } from "@/mastra/providers/provider-factory";
 import type { AiModelRecord } from "@/mastra/providers/model-registry";
 import {
+  apiSuccess,
   apiValidationError,
   apiNotFound,
   apiError,
 } from "@/services/errors/api-response";
+
+const MASTRA_DB_URL = process.env.MASTRA_DB_URL ?? "http://127.0.0.1:8080";
+const MASTRA_DB_TOKEN = process.env.MASTRA_DB_TOKEN ?? "";
 
 export const maxDuration = 60;
 
@@ -157,4 +162,64 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
   });
 
   return createUIMessageStreamResponse({ stream });
+});
+
+// GET: Retornar histórico de mensagens da thread (do Mastra Memory/LibSQL)
+export const GET = withTeacherRoute(async ({ supabase, userId }, request) => {
+  const url = new URL(request.url);
+  const segments = url.pathname.split("/");
+  const threadId = segments[segments.indexOf("threads") + 1];
+
+  // Verificar ownership via RLS
+  const { data: thread, error: threadError } = await supabase
+    .from("consultant_threads")
+    .select("id")
+    .eq("id", threadId)
+    .single();
+
+  if (threadError || !thread) {
+    return apiNotFound("Conversa não encontrada.");
+  }
+
+  // Buscar mensagens do Mastra Memory (LibSQL)
+  try {
+    const storage = new LibSQLStore({
+      id: "tea-consultant-storage",
+      url: MASTRA_DB_URL,
+      authToken: MASTRA_DB_TOKEN || undefined,
+    });
+
+    const memoryStore = await storage.getStore("memory");
+    if (!memoryStore) {
+      return apiSuccess({ messages: [] });
+    }
+
+    const result = await memoryStore.listMessages({
+      threadId,
+      resourceId: userId,
+    });
+
+    // Converter MastraDBMessage → formato simples para o frontend
+    const messages = result.messages
+      .filter((m) => m.role === "user" || m.role === "assistant")
+      .map((m) => {
+        // Extrair texto das parts (format v2)
+        const textContent =
+          m.content?.parts
+            ?.filter((p: Record<string, unknown>) => p.type === "text" && p.text)
+            .map((p: Record<string, unknown>) => p.text)
+            .join("") ?? "";
+
+        return {
+          id: m.id,
+          role: m.role,
+          content: textContent,
+          createdAt: m.createdAt,
+        };
+      });
+
+    return apiSuccess({ messages });
+  } catch {
+    return apiSuccess({ messages: [] });
+  }
 });
