@@ -17,8 +17,15 @@ import {
 
 export const maxDuration = 60;
 
-const messageSchema = z.object({
-  content: z.string().min(1).max(2000),
+// Schema do payload enviado pelo useChat (DefaultChatTransport do AI SDK v6)
+const useChatSchema = z.object({
+  messages: z.array(
+    z.object({
+      role: z.string(),
+      parts: z.array(z.object({ type: z.string(), text: z.string().optional() }).passthrough()).optional(),
+      content: z.string().optional(),
+    }).passthrough(),
+  ).min(1),
 });
 
 export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
@@ -26,11 +33,25 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
   const segments = url.pathname.split("/");
   const threadId = segments[segments.indexOf("threads") + 1];
 
-  // Validar input
+  // Validar input — extrair última mensagem do formato useChat
   const body = await request.json();
-  const parsed = messageSchema.safeParse(body);
+  const parsed = useChatSchema.safeParse(body);
   if (!parsed.success) {
     return apiValidationError(parsed.error);
+  }
+
+  // Extrair conteúdo da última mensagem do usuário
+  const lastMessage = parsed.data.messages[parsed.data.messages.length - 1];
+  const userContent =
+    lastMessage.content ??
+    lastMessage.parts
+      ?.filter((p) => p.type === "text" && p.text)
+      .map((p) => p.text)
+      .join("") ??
+    "";
+
+  if (!userContent || userContent.length === 0 || userContent.length > 2000) {
+    return apiError("VALIDATION_ERROR", "Mensagem inválida (vazia ou muito longa).", 400);
   }
 
   // Verificar ownership da thread (RLS)
@@ -73,7 +94,7 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
   const agent = createTeaConsultantAgent(model);
 
   // Stream da resposta via Mastra → UIMessageStream para useChat
-  const result = await agent.stream(parsed.data.content, {
+  const result = await agent.stream(userContent, {
     memory: {
       thread: threadId,
       resource: userId,
@@ -109,7 +130,7 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
         const fullResponse = await result.text;
         const title = await generateThreadTitle(
           model,
-          parsed.data.content,
+          userContent,
           fullResponse,
         );
         await supabase
@@ -125,9 +146,9 @@ export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
     } catch {
       // Fallback: usar mensagem do professor truncada
       const title =
-        parsed.data.content.length <= 80
-          ? parsed.data.content
-          : parsed.data.content.slice(0, 77) + "...";
+        userContent.length <= 80
+          ? userContent
+          : userContent.slice(0, 77) + "...";
       await supabase
         .from("consultant_threads")
         .update({ title, updated_at: new Date().toISOString() })
