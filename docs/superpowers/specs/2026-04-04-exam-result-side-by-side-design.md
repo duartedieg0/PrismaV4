@@ -22,7 +22,6 @@ Grid CSS com dois painéis usando Tailwind (`grid-cols-2` no desktop, `grid-cols
 ```
 ┌─────────────────────────────────────────────────────┐
 │  [N] Questão N                      [Tipo badge]    │  ← cabeçalho full-width
-│      Elementos visuais (se houver)                  │
 ├────────────────────────┬────────────────────────────┤
 │  ENUNCIADO ORIGINAL    │  [Aba1] [Aba2] [Aba3]     │
 │                        │                            │
@@ -61,18 +60,24 @@ Grid CSS com dois painéis usando Tailwind (`grid-cols-2` no desktop, `grid-cols
 
 ### `QuestionResult` (mudança principal)
 
-- **Remove:** state `showOriginal`, botão collapsible "Ver enunciado original"
-- **Cabeçalho:** número da questão, tipo (badge), elementos visuais — full-width acima dos painéis
+- **Remove:** state `showOriginal`, botão collapsible "Ver enunciado original", import `ChevronDown`
+- **Cabeçalho:** número da questão e tipo (badge) — full-width acima dos painéis
 - **Grid de dois painéis:** `grid-cols-1 md:grid-cols-2 gap-5`
-  - **Painel esquerdo (original):** título "Enunciado Original", texto do enunciado, alternativas originais (se objetiva)
-  - **Painel direito (adaptado):** abas de apoio + `AdaptationResultCard`
+  - **Painel esquerdo (original):** título "Enunciado Original", texto do enunciado, alternativas originais (se objetiva). Para questões dissertativas, o painel mostra apenas o texto — será mais curto que o direito, e isso é intencional (`items-start` mantém cada painel com sua altura natural)
+  - **Painel direito (adaptado):** abas de apoio ficam **dentro** do painel direito (topo do container com rounded), seguidas pelo `AdaptationResultCard`
 - **Abaixo dos painéis:** `PedagogicalDetails` da adaptação selecionada, full-width
+- **Edge case — zero supports:** se `question.supports` estiver vazio, o grid colapsa para coluna única mostrando apenas o enunciado original com uma mensagem "Nenhuma adaptação disponível"
 
 ### `AdaptationResultCard` (mudança pequena)
 
-- **Remove:** renderização do `PedagogicalDetails` (passa a ser responsabilidade do `QuestionResult`)
+- **Remove:** renderização do `PedagogicalDetails`
 - **Mantém:** conteúdo adaptado, alternativas adaptadas, copy bar, feedback form
-- **Exporta:** `PedagogicalDetails` como componente separado (ou o `QuestionResult` recebe os dados diretamente)
+
+### Novo arquivo: `pedagogical-details.tsx`
+
+- `PedagogicalDetails` é extraído de `adaptation-result-card.tsx` para `src/features/exams/results/components/pedagogical-details.tsx` como componente exportado
+- Props: `bnccSkills`, `bloomLevel`, `bnccAnalysis`, `bloomAnalysis` (mesmas de hoje)
+- `QuestionResult` importa e renderiza abaixo do grid, passando os dados da adaptação selecionada
 
 ### Sem mudanças
 
@@ -88,10 +93,12 @@ Grid CSS com dois painéis usando Tailwind (`grid-cols-2` no desktop, `grid-cols
 |----------|---------------|----------------|
 | Grid | `grid-cols-2 gap-5` | `grid-cols-1 gap-4` |
 | Proporção | 50/50 | full-width empilhado |
-| Alinhamento | `items-start` | — |
-| Painel original | `bg-surface-muted/40`, `ring-1 ring-border-default`, `rounded-xl p-4` | mesmo |
-| Painel adaptado | `bg-brand-50/50`, `ring-1 ring-brand-200/50`, `rounded-xl p-4` (estilo existente) | mesmo |
+| Alinhamento | `items-start` (painéis com alturas independentes) | — |
+| Painel original | `bg-white`, `ring-1 ring-border-default`, `rounded-xl p-4` | mesmo |
+| Painel adaptado | container com `rounded-xl ring-1 ring-brand-200/50`; abas no topo, conteúdo com `bg-brand-50/50 p-4` (estilo existente) | mesmo |
 | Detalhes pedagógicos | full-width, collapsible (estilo existente) | mesmo |
+
+Nota: o cabeçalho da questão mantém `bg-surface-muted/40`. O painel original usa `bg-white` para se diferenciar visualmente do cabeçalho.
 
 ## Decisões
 
@@ -99,4 +106,8 @@ Grid CSS com dois painéis usando Tailwind (`grid-cols-2` no desktop, `grid-cols
 2. Feedback permanece **por apoio** (por adaptação), dentro do painel adaptado
 3. Copy bar permanece dentro do painel adaptado
 4. Detalhes pedagógicos ficam abaixo dos dois painéis, mudam conforme a aba selecionada
-5. Sem mudanças em tipografia, cores, animações existentes
+5. Abas de apoio ficam **dentro** do painel direito (não full-width)
+6. `PedagogicalDetails` é extraído para arquivo próprio (`pedagogical-details.tsx`)
+7. Painéis usam `items-start` — alturas independentes é intencional
+8. Zero supports: grid colapsa para coluna única com mensagem de estado vazio
+9. Sem mudanças em tipografia ou animações existentes; apenas novos containers para o grid
