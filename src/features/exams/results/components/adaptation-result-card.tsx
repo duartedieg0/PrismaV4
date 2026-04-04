@@ -6,7 +6,6 @@ import {
 } from "lucide-react";
 import { CopyActionBar } from "@/features/exams/results/components/copy-action-bar";
 import { FeedbackForm } from "@/features/exams/results/components/feedback-form";
-import { PedagogicalDetails } from "@/features/exams/results/components/pedagogical-details";
 import type { AdaptationResultView } from "@/features/exams/results/contracts";
 
 type AdaptationResultCardProps = {
@@ -91,16 +90,6 @@ export function AdaptationResultCard({
           ) : null}
         </div>
       </div>
-
-      {/* ── Pedagogical Tags ── */}
-      {(adaptation.bnccSkills?.length || adaptation.bloomLevel) ? (
-        <PedagogicalDetails
-          bnccSkills={adaptation.bnccSkills}
-          bloomLevel={adaptation.bloomLevel}
-          bnccAnalysis={adaptation.bnccAnalysis}
-          bloomAnalysis={adaptation.bloomAnalysis}
-        />
-      ) : null}
 
       {/* ── Copy Bar ── */}
       {adaptation.copyBlock ? (
