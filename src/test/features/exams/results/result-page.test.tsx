@@ -71,6 +71,18 @@ describe("result page view", () => {
     });
   });
 
+  it("shows original content and alternatives side by side with adapted content", () => {
+    render(<ResultPageView result={result} />);
+
+    // Original content is always visible (no collapsible)
+    expect(screen.getByText("Quanto é 1/2 + 1/4?")).toBeInTheDocument();
+    expect(screen.getByText("1/3")).toBeInTheDocument();
+    expect(screen.getByText("3/4")).toBeInTheDocument();
+
+    // Adapted content is also visible
+    expect(screen.getByText(/quanto é metade mais um quarto/i)).toBeInTheDocument();
+  });
+
   it("renders the result hierarchy and BNCC/Bloom context", () => {
     render(<ResultPageView result={result} />);
 
@@ -84,12 +96,24 @@ describe("result page view", () => {
     expect(screen.getByText(/aplicar/i)).toBeInTheDocument();
   });
 
+  it("no longer renders the collapsible original content button", () => {
+    render(<ResultPageView result={result} />);
+
+    expect(
+      screen.queryByRole("button", { name: /ver enunciado original/i }),
+    ).not.toBeInTheDocument();
+  });
+
   it("switches support tabs and exposes error state per adaptation", () => {
     render(<ResultPageView result={result} />);
 
     fireEvent.click(screen.getByRole("tab", { name: /tdah/i }));
 
     expect(screen.getByText(/erro ao adaptar/i)).toBeInTheDocument();
+    // Pedagogical details should disappear when error tab has no BNCC/Bloom data
+    expect(
+      screen.queryByRole("button", { name: /detalhes pedagógicos/i }),
+    ).not.toBeInTheDocument();
   });
 
   it("copies adaptation content and submits feedback", async () => {
@@ -115,5 +139,27 @@ describe("result page view", () => {
         }),
       );
     });
+  });
+
+  it("shows empty state when question has zero supports", () => {
+    const noSupportsResult: ExamResultView = {
+      ...result,
+      questions: [
+        {
+          questionId: "question-no-supports",
+          orderNum: 1,
+          questionType: "essay",
+          originalContent: "Explique frações.",
+          originalAlternatives: null,
+          supports: [],
+        },
+      ],
+    };
+
+    render(<ResultPageView result={noSupportsResult} />);
+
+    expect(screen.getByText("Explique frações.")).toBeInTheDocument();
+    expect(screen.getByText(/nenhuma adaptação disponível/i)).toBeInTheDocument();
+    expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
   });
 });
