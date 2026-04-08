@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { forwardRef, useState } from "react";
 import { Star, Send, Check, AlertCircle, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/design-system/components/button";
@@ -12,13 +12,16 @@ type FeedbackFormProps = {
     rating: number;
     comment: string | null;
   } | null;
+  onFeedbackSubmit?: () => void;
 };
 
-export function FeedbackForm({
-  examId,
-  adaptationId,
-  existingFeedback,
-}: FeedbackFormProps) {
+export const FeedbackForm = forwardRef<HTMLFormElement, FeedbackFormProps>(
+  function FeedbackForm({
+    examId,
+    adaptationId,
+    existingFeedback,
+    onFeedbackSubmit,
+  }, ref) {
   const [rating, setRating] = useState<number>(existingFeedback?.rating ?? 0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [comment, setComment] = useState(existingFeedback?.comment ?? "");
@@ -46,6 +49,7 @@ export function FeedbackForm({
       }
 
       setStatus("success");
+      onFeedbackSubmit?.();
     } catch {
       setStatus("error");
     }
@@ -55,6 +59,7 @@ export function FeedbackForm({
 
   return (
     <form
+      ref={ref}
       onSubmit={handleSubmit}
       className="flex flex-col gap-4 rounded-xl border border-border-default bg-surface-muted/30 p-4"
     >
@@ -173,4 +178,4 @@ export function FeedbackForm({
       </div>
     </form>
   );
-}
+});
