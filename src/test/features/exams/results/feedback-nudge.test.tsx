@@ -124,3 +124,77 @@ describe("CopyActionBar — onCopySuccess", () => {
     expect(onCopySuccess).not.toHaveBeenCalled();
   });
 });
+
+describe("CopyActionBar — popover de nudge", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+  });
+
+  it("renderiza o popover quando showFeedbackNudge é true", () => {
+    render(
+      <CopyActionBar
+        examId="exam-1"
+        text="conteúdo"
+        showFeedbackNudge={true}
+        onNudgeClose={vi.fn()}
+        onScrollToFeedback={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("dialog", { name: /avaliar adaptação/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/gostou desta adaptação/i),
+    ).toBeInTheDocument();
+  });
+
+  it("não renderiza o popover quando showFeedbackNudge é false", () => {
+    render(
+      <CopyActionBar
+        examId="exam-1"
+        text="conteúdo"
+        showFeedbackNudge={false}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("dialog", { name: /avaliar adaptação/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("chama onNudgeClose ao clicar no botão fechar", () => {
+    const onNudgeClose = vi.fn();
+    render(
+      <CopyActionBar
+        examId="exam-1"
+        text="conteúdo"
+        showFeedbackNudge={true}
+        onNudgeClose={onNudgeClose}
+        onScrollToFeedback={vi.fn()}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /fechar/i }));
+    expect(onNudgeClose).toHaveBeenCalledTimes(1);
+  });
+
+  it("chama onScrollToFeedback ao clicar em Avaliar", () => {
+    const onScrollToFeedback = vi.fn();
+    render(
+      <CopyActionBar
+        examId="exam-1"
+        text="conteúdo"
+        showFeedbackNudge={true}
+        onNudgeClose={vi.fn()}
+        onScrollToFeedback={onScrollToFeedback}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /avaliar/i }));
+    expect(onScrollToFeedback).toHaveBeenCalledTimes(1);
+  });
+});

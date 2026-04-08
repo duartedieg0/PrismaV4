@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, Check, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, Check, AlertCircle, X, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/design-system/components/button";
 
@@ -29,6 +29,19 @@ export function CopyActionBar({
   onScrollToFeedback,
 }: CopyActionBarProps) {
   const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
+
+  useEffect(() => {
+    if (!showFeedbackNudge) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onNudgeClose?.();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showFeedbackNudge, onNudgeClose]);
 
   async function handleCopy() {
     try {
@@ -59,7 +72,49 @@ export function CopyActionBar({
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-border-default bg-surface-muted/50 px-4 py-3">
+    <div className="relative flex items-center gap-3 rounded-xl border border-border-default bg-surface-muted/50 px-4 py-3">
+      {/* Popover de nudge */}
+      {showFeedbackNudge ? (
+        <div
+          role="dialog"
+          aria-modal="false"
+          aria-label="Avaliar adaptação"
+          aria-describedby={`nudge-text-${adaptationId}`}
+          className={cn(
+            "absolute bottom-full left-0 mb-2 z-10",
+            "w-full max-w-sm rounded-xl border border-border-default",
+            "bg-white px-4 py-3 shadow-md",
+            "flex items-start justify-between gap-3",
+          )}
+        >
+          <p
+            id={`nudge-text-${adaptationId}`}
+            className="text-sm text-text-primary"
+          >
+            Gostou desta adaptação? Seu feedback ajuda a melhorar as próximas.
+          </p>
+          <div className="flex shrink-0 items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onScrollToFeedback}
+              className="gap-1"
+            >
+              Avaliar
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
+            <button
+              type="button"
+              onClick={onNudgeClose}
+              aria-label="Fechar"
+              className="rounded p-1 text-text-muted transition-colors hover:text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-200"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      ) : null}
       <Button
         onClick={handleCopy}
         type="button"
