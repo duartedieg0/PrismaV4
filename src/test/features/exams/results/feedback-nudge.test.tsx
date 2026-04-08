@@ -197,4 +197,20 @@ describe("CopyActionBar — popover de nudge", () => {
     fireEvent.click(screen.getByRole("button", { name: /avaliar/i }));
     expect(onScrollToFeedback).toHaveBeenCalledTimes(1);
   });
+
+  it("chama onNudgeClose ao pressionar Escape", () => {
+    const onNudgeClose = vi.fn();
+    render(
+      <CopyActionBar
+        examId="exam-1"
+        text="conteúdo"
+        showFeedbackNudge={true}
+        onNudgeClose={onNudgeClose}
+        onScrollToFeedback={vi.fn()}
+      />,
+    );
+
+    fireEvent.keyDown(document, { key: "Escape" });
+    expect(onNudgeClose).toHaveBeenCalledTimes(1);
+  });
 });

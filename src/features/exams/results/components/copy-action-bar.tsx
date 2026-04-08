@@ -77,7 +77,6 @@ export function CopyActionBar({
       {showFeedbackNudge ? (
         <div
           role="dialog"
-          aria-modal="false"
           aria-label="Avaliar adaptação"
           aria-describedby={`nudge-text-${adaptationId}`}
           className={cn(
