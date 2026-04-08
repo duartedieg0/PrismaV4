@@ -11,6 +11,10 @@ type CopyActionBarProps = {
   supportId?: string;
   text: string;
   onCopy?: (text: string) => Promise<void> | void;
+  onCopySuccess?: () => void;       // new — called after successful copy
+  showFeedbackNudge?: boolean;      // new — will be used in Task 3
+  onNudgeClose?: () => void;        // new — will be used in Task 3
+  onScrollToFeedback?: () => void;  // new — will be used in Task 3
 };
 
 export function CopyActionBar({
@@ -19,6 +23,10 @@ export function CopyActionBar({
   supportId,
   text,
   onCopy,
+  onCopySuccess,
+  showFeedbackNudge,
+  onNudgeClose,
+  onScrollToFeedback,
 }: CopyActionBarProps) {
   const [status, setStatus] = useState<"idle" | "copied" | "error">("idle");
 
@@ -42,6 +50,7 @@ export function CopyActionBar({
       });
 
       setStatus("copied");
+      onCopySuccess?.();                         // ← new
       setTimeout(() => setStatus("idle"), 2500);
     } catch {
       setStatus("error");
