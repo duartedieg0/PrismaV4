@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef, useState } from "react";
 import {
   AlertCircle,
   Sparkles,
@@ -19,6 +20,31 @@ export function AdaptationResultCard({
   adaptation,
   onCopy,
 }: AdaptationResultCardProps) {
+  const [feedbackSubmitted, setFeedbackSubmitted] = useState(
+    adaptation.feedback !== null,
+  );
+  const [showNudge, setShowNudge] = useState(false);
+  const feedbackRef = useRef<HTMLFormElement>(null);
+
+  function handleCopySuccess() {
+    if (!feedbackSubmitted && !showNudge) {
+      setShowNudge(true);
+    }
+  }
+
+  function handleNudgeClose() {
+    setShowNudge(false);
+  }
+
+  function handleScrollToFeedback() {
+    feedbackRef.current?.scrollIntoView({ behavior: "smooth" });
+  }
+
+  function handleFeedbackSubmit() {
+    setFeedbackSubmitted(true);
+    setShowNudge(false);
+  }
+
   if (adaptation.status === "error") {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4">
@@ -97,6 +123,10 @@ export function AdaptationResultCard({
           adaptationId={adaptation.adaptationId}
           examId={examId}
           onCopy={onCopy}
+          onCopySuccess={handleCopySuccess}
+          showFeedbackNudge={showNudge}
+          onNudgeClose={handleNudgeClose}
+          onScrollToFeedback={handleScrollToFeedback}
           supportId={adaptation.supportId}
           text={adaptation.copyBlock.text}
         />
@@ -104,9 +134,11 @@ export function AdaptationResultCard({
 
       {/* ── Feedback ── */}
       <FeedbackForm
+        ref={feedbackRef}
         adaptationId={adaptation.adaptationId}
         examId={examId}
         existingFeedback={adaptation.feedback}
+        onFeedbackSubmit={handleFeedbackSubmit}
       />
     </div>
   );

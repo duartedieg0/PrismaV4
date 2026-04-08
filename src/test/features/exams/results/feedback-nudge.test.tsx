@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FeedbackForm } from "@/features/exams/results/components/feedback-form";
 import { CopyActionBar } from "@/features/exams/results/components/copy-action-bar";
+import { AdaptationResultCard } from "@/features/exams/results/components/adaptation-result-card";
+import type { AdaptationResultView } from "@/features/exams/results/contracts";
 
 describe("FeedbackForm — forwardRef + onFeedbackSubmit", () => {
   beforeEach(() => {
@@ -212,5 +214,134 @@ describe("CopyActionBar — popover de nudge", () => {
 
     fireEvent.keyDown(document, { key: "Escape" });
     expect(onNudgeClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+const adaptationBase: AdaptationResultView = {
+  adaptationId: "adapt-1",
+  supportId: "support-1",
+  supportName: "Dislexia",
+  status: "completed",
+  adaptedContent: "Conteúdo adaptado",
+  adaptedAlternatives: null,
+  bnccSkills: null,
+  bloomLevel: null,
+  bnccAnalysis: null,
+  bloomAnalysis: null,
+  copyBlock: { type: "objective", text: "Conteúdo adaptado" },
+  feedback: null,
+};
+
+describe("AdaptationResultCard — feedback nudge", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: true }));
+    vi.stubGlobal("navigator", {
+      clipboard: { writeText: vi.fn().mockResolvedValue(undefined) },
+    });
+  });
+
+  it("exibe nudge após cópia bem-sucedida quando feedback é null", async () => {
+    render(
+      <AdaptationResultCard examId="exam-1" adaptation={adaptationBase} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /copiar adaptação/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("dialog", { name: /avaliar adaptação/i }),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("não exibe nudge quando adaptation.feedback já existe", async () => {
+    render(
+      <AdaptationResultCard
+        examId="exam-1"
+        adaptation={{ ...adaptationBase, feedback: { id: "fb-1", rating: 4, comment: null } }}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /copiar adaptação/i }));
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+    });
+    expect(
+      screen.queryByRole("dialog", { name: /avaliar adaptação/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("fecha o nudge ao clicar em ✕", async () => {
+    render(
+      <AdaptationResultCard examId="exam-1" adaptation={adaptationBase} />,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /copiar adaptação/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: /avaliar adaptação/i })).toBeInTheDocument(),
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: /fechar/i }));
+    expect(
+      screen.queryByRole("dialog", { name: /avaliar adaptação/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("reabre o nudge ao copiar novamente após fechar", async () => {
+    render(
+      <AdaptationResultCard examId="exam-1" adaptation={adaptationBase} />,
+    );
+
+    // Primeiro clique — abre nudge
+    fireEvent.click(screen.getByRole("button", { name: /copiar adaptação/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: /avaliar adaptação/i })).toBeInTheDocument(),
+    );
+    fireEvent.click(screen.getByRole("button", { name: /fechar/i }));
+    expect(
+      screen.queryByRole("dialog", { name: /avaliar adaptação/i }),
+    ).not.toBeInTheDocument();
+
+    // Aguarda o botão voltar ao label "Copiar adaptação" (após 2500ms de "Copiado!")
+    const copyButton = await waitFor(
+      () => screen.getByRole("button", { name: /copiar adaptação/i }),
+      { timeout: 3500 },
+    );
+    fireEvent.click(copyButton);
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: /avaliar adaptação/i })).toBeInTheDocument(),
+    );
+  });
+
+  it("fecha o nudge e não o exibe novamente após envio de feedback", async () => {
+    render(
+      <AdaptationResultCard examId="exam-1" adaptation={adaptationBase} />,
+    );
+
+    // Abrir nudge
+    fireEvent.click(screen.getByRole("button", { name: /copiar adaptação/i }));
+    await waitFor(() =>
+      expect(screen.getByRole("dialog", { name: /avaliar adaptação/i })).toBeInTheDocument(),
+    );
+
+    // Enviar feedback
+    fireEvent.click(screen.getByRole("button", { name: /5 estrelas/i }));
+    fireEvent.click(screen.getByRole("button", { name: /enviar feedback/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog", { name: /avaliar adaptação/i })).not.toBeInTheDocument(),
+    );
+
+    // Aguarda o botão voltar ao label "Copiar adaptação" e copia novamente
+    const copyButton = await waitFor(
+      () => screen.getByRole("button", { name: /copiar adaptação/i }),
+      { timeout: 3500 },
+    );
+    fireEvent.click(copyButton);
+    await waitFor(() => expect(navigator.clipboard.writeText).toHaveBeenCalledTimes(2));
+    // Nudge não deve aparecer após feedback enviado
+    expect(
+      screen.queryByRole("dialog", { name: /avaliar adaptação/i }),
+    ).not.toBeInTheDocument();
   });
 });
