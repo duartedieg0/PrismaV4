@@ -11,10 +11,10 @@ type CopyActionBarProps = {
   supportId?: string;
   text: string;
   onCopy?: (text: string) => Promise<void> | void;
-  onCopySuccess?: () => void;       // new — called after successful copy
-  showFeedbackNudge?: boolean;      // new — will be used in Task 3
-  onNudgeClose?: () => void;        // new — will be used in Task 3
-  onScrollToFeedback?: () => void;  // new — will be used in Task 3
+  onCopySuccess?: () => void;
+  showFeedbackNudge?: boolean;
+  onNudgeClose?: () => void;
+  onScrollToFeedback?: () => void;
 };
 
 export function CopyActionBar({
