@@ -37,7 +37,7 @@ export function AdaptationResultCard({
   }
 
   function handleScrollToFeedback() {
-    feedbackRef.current?.scrollIntoView({ behavior: "smooth" });
+    feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function handleFeedbackSubmit() {
