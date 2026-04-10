@@ -59,10 +59,12 @@ async function main() {
       name: "TEA Consultant",
       model: "claude-sonnet-4-6",
       instructions: MANAGED_AGENT_SYSTEM_PROMPT,
-      tools: {
-        toolset: "agent_toolset_20260401",
-        default_config: { enabled: false },
-      },
+      tools: [
+        {
+          type: "agent_toolset_20260401",
+          default_config: { enabled: false },
+        },
+      ],
     });
     createdResources.push({ type: "Agent", id: agent.id });
     console.log("✓ Agent criado:", agent.id);
