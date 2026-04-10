@@ -4,6 +4,7 @@ import {
   apiSuccess,
   apiValidationError,
   apiError,
+  apiNotFound,
 } from "@/services/errors/api-response";
 import type { TeacherContext } from "@/features/support/with-teacher-route";
 import type { TeaConsultantGateway, ManagedEvent } from "@/gateways/managed-agents";
@@ -74,4 +75,31 @@ export async function managedCreateThread(
   return apiSuccess({ threadId: data.id }, 201);
 }
 
-// managedStreamMessage and managedGetMessages will be added in Tasks 6-7
+export async function managedGetMessages(
+  ctx: TeacherContext,
+  req: Request,
+  gateway: TeaConsultantGateway,
+): Promise<Response> {
+  const url = new URL(req.url);
+  const segments = url.pathname.split("/");
+  const threadId = segments[segments.indexOf("threads") + 1];
+
+  const { data: thread, error: threadError } = await ctx.supabase
+    .from("consultant_threads")
+    .select("id, managed_session_id")
+    .eq("id", threadId)
+    .single();
+
+  if (threadError || !thread) return apiNotFound("Conversa não encontrada.");
+
+  try {
+    const messages = await gateway.getSessionMessages(
+      (thread as Record<string, unknown>).managed_session_id as string,
+    );
+    return apiSuccess({ messages });
+  } catch {
+    return apiSuccess({ messages: [] });
+  }
+}
+
+// managedStreamMessage will be added in Task 7

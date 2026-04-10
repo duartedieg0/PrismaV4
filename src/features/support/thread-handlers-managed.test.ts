@@ -249,3 +249,82 @@ describe("consumeManagedStreamToText", () => {
     expect(text).toBe("");
   });
 });
+
+import type { SessionMessage } from "@/gateways/managed-agents";
+
+describe("managedGetMessages", () => {
+  function makeMessagesRequest(threadId = "thread-abc"): Request {
+    return new Request(`http://localhost/api/teacher/threads/${threadId}/messages`);
+  }
+
+  it("deve retornar mensagens no formato correto", async () => {
+    const { managedGetMessages } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx();
+    const messages: SessionMessage[] = [
+      { id: "evt_1", role: "user", content: "Como adaptar?", createdAt: "2026-04-10T10:00:00Z" },
+      { id: "evt_2", role: "assistant", content: "Para adaptar...", createdAt: "2026-04-10T10:00:05Z" },
+    ];
+    const gateway = makeGateway({
+      getSessionMessages: vi.fn().mockResolvedValue(messages),
+    });
+
+    const res = await managedGetMessages(ctx, makeMessagesRequest(), gateway);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.messages).toHaveLength(2);
+    expect(body.data.messages[0]).toEqual(messages[0]);
+    expect(body.data.messages[1]).toEqual(messages[1]);
+  });
+
+  it("deve chamar gateway com o managed_session_id correto", async () => {
+    const { managedGetMessages } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx({ threadRow: { id: "thread-abc", managed_session_id: "sess_XYZ" } });
+    const gateway = makeGateway({ getSessionMessages: vi.fn().mockResolvedValue([]) });
+
+    await managedGetMessages(ctx, makeMessagesRequest(), gateway);
+
+    expect(gateway.getSessionMessages).toHaveBeenCalledWith("sess_XYZ");
+  });
+
+  it("deve retornar array vazio quando não há mensagens", async () => {
+    const { managedGetMessages } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx();
+    const gateway = makeGateway({ getSessionMessages: vi.fn().mockResolvedValue([]) });
+
+    const res = await managedGetMessages(ctx, makeMessagesRequest(), gateway);
+    const body = await res.json();
+
+    expect(body.data.messages).toEqual([]);
+  });
+
+  it("deve retornar 404 quando thread não existe", async () => {
+    const { managedGetMessages } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx({ threadRow: null, threadError: { code: "PGRST116" } });
+    const gateway = makeGateway();
+
+    const res = await managedGetMessages(ctx, makeMessagesRequest(), gateway);
+
+    expect(res.status).toBe(404);
+    expect(gateway.getSessionMessages).not.toHaveBeenCalled();
+  });
+
+  it("deve retornar array vazio quando gateway lança erro", async () => {
+    const { managedGetMessages } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx();
+    const gateway = makeGateway({
+      getSessionMessages: vi.fn().mockRejectedValue(new Error("API error")),
+    });
+
+    const res = await managedGetMessages(ctx, makeMessagesRequest(), gateway);
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.data.messages).toEqual([]);
+  });
+});
