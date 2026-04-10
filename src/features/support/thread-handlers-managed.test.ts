@@ -4,6 +4,30 @@ import type { TeacherContext } from "./with-teacher-route";
 import type { TeaConsultantGateway } from "@/gateways/managed-agents";
 import type { ManagedSession } from "@/gateways/managed-agents";
 
+// Captured after() callbacks — run them manually after consuming stream
+const afterCallbacks: Array<() => Promise<void>> = [];
+async function runAfterCallbacks() {
+  for (const cb of afterCallbacks) await cb();
+  afterCallbacks.length = 0;
+}
+
+// These vi.mock() calls are hoisted by Vitest
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: vi.fn((cb: () => Promise<void>) => { afterCallbacks.push(cb); }),
+  };
+});
+
+vi.mock("@/mastra/providers/provider-factory", () => ({
+  createMastraModel: vi.fn(() => ({ modelId: "mock-model" })),
+}));
+
+vi.mock("@/features/support/thread-title", () => ({
+  generateThreadTitle: vi.fn().mockResolvedValue("Título Gerado"),
+}));
+
 // Helpers
 function makeCtx(overrides?: {
   threadRow?: Record<string, unknown> | null;
@@ -326,5 +350,165 @@ describe("managedGetMessages", () => {
 
     expect(res.status).toBe(200);
     expect(body.data.messages).toEqual([]);
+  });
+});
+
+// --- Tests for managedStreamMessage ---
+describe("managedStreamMessage", () => {
+  async function* makeStreamEvents(events: Partial<ManagedEvent>[]): AsyncGenerator<ManagedEvent> {
+    for (const e of events) yield e as ManagedEvent;
+  }
+
+  function makeStreamRequest(body: unknown, threadId = "thread-abc"): Request {
+    return new Request(
+      `http://localhost/api/teacher/threads/${threadId}/messages`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      },
+    );
+  }
+
+  it("deve retornar resposta de streaming (status 200, content-type text/event-stream ou data-stream)", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx();
+    const gateway = makeGateway({
+      sendMessageAndStream: vi.fn().mockResolvedValue(
+        makeStreamEvents([
+          { type: "agent.message", content: [{ type: "text", text: "Olá!" }] },
+          { type: "session.status_idle" },
+        ]),
+      ),
+    });
+
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "Como adaptar?" }],
+    });
+
+    const res = await managedStreamMessage(ctx, req, gateway);
+
+    expect(res.status).toBe(200);
+    const ct = res.headers.get("content-type") ?? "";
+    expect(ct).toMatch(/text\/|octet-stream/);
+  });
+
+  it("deve chamar sendMessageAndStream com sessionId e mensagem corretos", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx({
+      threadRow: { id: "thread-abc", title: "Existente", managed_session_id: "sess_XYZ", agent_slug: "tea-consultant" },
+    });
+    const sendMock = vi.fn().mockResolvedValue(
+      makeStreamEvents([{ type: "session.status_idle" }]),
+    );
+    const gateway = makeGateway({ sendMessageAndStream: sendMock });
+
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "Pergunta do professor" }],
+    });
+
+    await managedStreamMessage(ctx, req, gateway);
+
+    expect(sendMock).toHaveBeenCalledWith("sess_XYZ", "Pergunta do professor");
+  });
+
+  it("deve retornar 400 para mensagem vazia", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx();
+    const gateway = makeGateway();
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "" }],
+    });
+
+    const res = await managedStreamMessage(ctx, req, gateway);
+    expect(res.status).toBe(400);
+  });
+
+  it("deve retornar 400 para mensagem com mais de 2000 chars", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx();
+    const gateway = makeGateway();
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "x".repeat(2001) }],
+    });
+
+    const res = await managedStreamMessage(ctx, req, gateway);
+    expect(res.status).toBe(400);
+  });
+
+  it("deve retornar 404 quando thread não existe", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+
+    const ctx = makeCtx({ threadRow: null, threadError: { code: "PGRST116" } });
+    const gateway = makeGateway();
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "Pergunta" }],
+    });
+
+    const res = await managedStreamMessage(ctx, req, gateway);
+    expect(res.status).toBe(404);
+  });
+
+  it("deve chamar generateThreadTitle na primeira mensagem (sem título)", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+    const { generateThreadTitle } = await import("@/features/support/thread-title");
+    vi.mocked(generateThreadTitle).mockClear();
+
+    const ctx = makeCtx({
+      threadRow: { id: "thread-abc", title: null, managed_session_id: "sess_01", agent_slug: "tea-consultant" },
+    });
+    const gateway = makeGateway({
+      sendMessageAndStream: vi.fn().mockResolvedValue(
+        makeStreamEvents([
+          { type: "agent.message", content: [{ type: "text", text: "Resposta." }] },
+          { type: "session.status_idle" },
+        ]),
+      ),
+    });
+
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "Primeira pergunta" }],
+    });
+
+    const res = await managedStreamMessage(ctx, req, gateway);
+    // Fully consume the stream so execute() completes and fullResponse is populated
+    const reader = res.body!.getReader();
+    while (!(await reader.read()).done) { /* drain */ }
+    // Now run after() callbacks that were captured
+    await runAfterCallbacks();
+
+    expect(generateThreadTitle).toHaveBeenCalledWith(
+      expect.anything(),
+      "Primeira pergunta",
+      "Resposta.",
+    );
+  });
+
+  it("não deve chamar generateThreadTitle quando thread já tem título", async () => {
+    const { managedStreamMessage } = await import("./thread-handlers-managed");
+    const { generateThreadTitle } = await import("@/features/support/thread-title");
+    vi.mocked(generateThreadTitle).mockClear();
+
+    const ctx = makeCtx({
+      threadRow: { id: "thread-abc", title: "Título já existe", managed_session_id: "sess_01", agent_slug: "tea-consultant" },
+    });
+    const gateway = makeGateway({
+      sendMessageAndStream: vi.fn().mockResolvedValue(
+        makeStreamEvents([{ type: "session.status_idle" }]),
+      ),
+    });
+
+    const req = makeStreamRequest({
+      messages: [{ role: "user", content: "Segunda pergunta" }],
+    });
+
+    await managedStreamMessage(ctx, req, gateway);
+    // Run any captured after() callbacks
+    await runAfterCallbacks();
+    expect(generateThreadTitle).not.toHaveBeenCalled();
   });
 });
