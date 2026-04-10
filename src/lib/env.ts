@@ -21,6 +21,8 @@ const serverEnvSchema = z
     MANAGED_AGENT_ID: z.string().min(1).optional(),
     MANAGED_AGENT_ENVIRONMENT_ID: z.string().min(1).optional(),
     MANAGED_AGENT_MEMORY_STORE_ID: z.string().min(1).optional(),
+    // Feature flag do backend do Consultor TEA
+    CONSULTANT_BACKEND: z.enum(["mastra", "managed"]).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.MANAGED_AGENT_ID) return;
