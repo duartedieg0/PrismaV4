@@ -1,14 +1,14 @@
 import { createVectorQueryTool } from "@mastra/rag";
 import { createVectorStore, getEmbeddingModel } from "./vector-store";
 
-const TEA_INDEX_NAME = "tea-knowledge-base";
+const TEA_INDEX_NAME = "tea_knowledge_base";
 
 export function createTeaQueryTool() {
   const vectorStore = createVectorStore();
   const embeddingModel = getEmbeddingModel();
 
   return createVectorQueryTool({
-    vectorStoreName: "tea-knowledge-base",
+    vectorStoreName: "tea_knowledge_base",
     indexName: TEA_INDEX_NAME,
     vectorStore,
     model: embeddingModel,

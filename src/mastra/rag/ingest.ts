@@ -4,7 +4,7 @@ import { embed } from "ai";
 import { chunkMarkdown } from "./chunker";
 import { createVectorStore, getEmbeddingModel } from "./vector-store";
 
-const TEA_INDEX_NAME = "tea-knowledge-base";
+const TEA_INDEX_NAME = "tea_knowledge_base";
 
 async function ingest(filePaths: string[]) {
   const vectorStore = createVectorStore();
