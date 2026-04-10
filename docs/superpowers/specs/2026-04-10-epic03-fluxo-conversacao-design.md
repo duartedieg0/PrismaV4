@@ -145,9 +145,10 @@ export const POST = withTeacherRoute((ctx, req) =>
 
 **`managedStreamMessage`:**
 1. Valida input (mesmo schema `useChatSchema`, limite 2000 chars) — sem mudança
-2. Busca thread no Supabase incluindo `managed_session_id`
-3. Chama `gateway.sendMessageAndStream(sessionId, userContent)`
-4. Converte `AsyncIterable<ManagedEvent>` → `UIMessageStream`:
+2. Busca thread no Supabase incluindo `managed_session_id` e `title` (SELECT `id, agent_slug, title, managed_session_id`)
+3. Busca modelo da tabela `ai_models` (igual ao handler Mastra) — necessário para `generateThreadTitle` no `after()`
+4. Chama `gateway.sendMessageAndStream(sessionId, userContent)`
+5. Converte `AsyncIterable<ManagedEvent>` → `UIMessageStream`:
 
 ```typescript
 let fullResponse = "";
@@ -180,10 +181,10 @@ const stream = createUIMessageStream({
 });
 ```
 
-5. Em background (`after()`):
+6. Em background (`after()`):
    - Se primeira mensagem (thread sem título): chama `generateThreadTitle(model, userContent, fullResponse)`
    - Atualiza `updated_at`
-6. Retorna `createUIMessageStreamResponse({ stream })`
+7. Retorna `createUIMessageStreamResponse({ stream })`
 
 `maxDuration` sobe de 60 para 300 segundos (Managed Agents pode levar mais por causa do memory_search).
 
@@ -191,6 +192,8 @@ const stream = createUIMessageStream({
 - `agent.tool_use` é ignorado — o professor não vê o memory_search
 - Múltiplos `agent.message` são acumulados no mesmo `text-0` — resposta única contínua
 - Erro mid-stream emite mensagem inline em vez de deixar o stream pendurado
+- Se `session.status_idle` nunca chegar (crash remoto), o `for await` termina naturalmente quando o stream fechar; o bloco `catch` emite mensagem de erro antes do `finish`
+- `generateThreadTitle` usa o mesmo modelo da tabela `ai_models` — a função é agnóstica ao backend do consultor
 
 **Critérios de aceite:**
 - [ ] Validação de input idêntica (schema, 2000 chars)
@@ -199,9 +202,10 @@ const stream = createUIMessageStream({
 - [ ] Frontend recebe UIMessageStream que `useChat` consome
 - [ ] Eventos `agent.tool_use` não aparecem no stream do professor
 - [ ] Texto acumulado para geração de título
-- [ ] Título gerado apenas na primeira mensagem
+- [ ] Título gerado apenas na primeira mensagem (usa modelo da tabela `ai_models`)
 - [ ] `updated_at` atualizado
 - [ ] Erro mid-stream tratado (não crash, não tela branca)
+- [ ] Stream fechado pelo servidor (sem hanging) mesmo se `session.status_idle` não chegar
 - [ ] `maxDuration = 300`
 - [ ] Testes com mock do stream (eventos simulados)
 
