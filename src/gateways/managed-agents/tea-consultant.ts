@@ -69,8 +69,7 @@ export function createTeaConsultantGateway(
 
       try {
         await events.send(sessionId, {
-          type: "user.message",
-          content: [{ type: "text", text: message }],
+          events: [{ type: "user.message", content: [{ type: "text", text: message }] }],
         });
       } catch (error) {
         throw new SessionStreamError(`Falha ao enviar mensagem: ${String(error)}`);

@@ -89,7 +89,11 @@ describe("createTeaConsultantGateway", () => {
       expect(mockEventsStream).toHaveBeenCalledWith("sess_01abc");
       expect(mockEventsSend).toHaveBeenCalledWith(
         "sess_01abc",
-        expect.objectContaining({ type: "user.message" }),
+        expect.objectContaining({
+          events: expect.arrayContaining([
+            expect.objectContaining({ type: "user.message" }),
+          ]),
+        }),
       );
       // Stream deve ser iterável
       expect(stream[Symbol.asyncIterator]).toBeDefined();
