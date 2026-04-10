@@ -58,7 +58,7 @@ async function main() {
     const agent = await (client.beta as any).agents.create({
       name: "TEA Consultant",
       model: "claude-sonnet-4-6",
-      instructions: MANAGED_AGENT_SYSTEM_PROMPT,
+      system: MANAGED_AGENT_SYSTEM_PROMPT,
       tools: [
         {
           type: "agent_toolset_20260401",
@@ -74,30 +74,25 @@ async function main() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const environment = await (client.beta as any).environments.create({
       name: "tea-consultant-env",
-      type: "cloud",
-      networking: "unrestricted",
+      config: {
+        type: "cloud",
+        networking: { type: "unrestricted" },
+      },
     });
     createdResources.push({ type: "Environment", id: environment.id });
     console.log("✓ Environment criado:", environment.id);
 
-    // 3. Criar o Memory Store
-    console.log("Criando Memory Store TEA Knowledge Base...");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const memoryStore = await (client.beta as any).memory.stores.create({
-      name: "TEA Knowledge Base",
-      description:
-        "Base de conhecimento sobre TEA (Transtorno do Espectro Autista), adaptação de avaliações, legislação brasileira de educação inclusiva e boas práticas pedagógicas. O agente deve consultar esta base SEMPRE antes de responder perguntas.",
-    });
-    createdResources.push({ type: "Memory Store", id: memoryStore.id });
-    console.log("✓ Memory Store criado:", memoryStore.id);
+    // 3. Memory Store — API não disponível nesta versão do SDK
+    console.warn("⚠️  Memory Store API (client.beta.memory) não está disponível nesta versão do SDK.");
+    console.warn("   MANAGED_AGENT_MEMORY_STORE_ID não será gerado. Ignorando esta etapa.\n");
 
     // Imprimir IDs no formato .env
     console.log("\n--- Copie para seu .env.local ---");
     console.log(`MANAGED_AGENT_ID=${agent.id}`);
     console.log(`MANAGED_AGENT_ENVIRONMENT_ID=${environment.id}`);
-    console.log(`MANAGED_AGENT_MEMORY_STORE_ID=${memoryStore.id}`);
+    console.log("# MANAGED_AGENT_MEMORY_STORE_ID=<indisponível — Memory Store API não existe neste SDK>");
     console.log("---------------------------------");
-    console.log("✓ Provisionamento completo! Adicione as vars acima ao .env.local e reinicie o app.\n");
+    console.log("✓ Provisionamento parcial completo (Agent + Environment). Memory Store requer acesso ao research preview.\n");
 
   } catch (error) {
     console.error("\n❌ Erro durante o provisionamento:", error);

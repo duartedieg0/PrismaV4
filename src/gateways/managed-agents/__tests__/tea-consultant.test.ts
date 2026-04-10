@@ -35,7 +35,7 @@ describe("createTeaConsultantGateway", () => {
   });
 
   describe("createSession", () => {
-    it("deve criar sessão com agentId, environmentId e memory store corretos", async () => {
+    it("deve criar sessão com agentId e environmentId corretos", async () => {
       mockSessionCreate.mockResolvedValue({
         id: "sess_01abc",
         agent_id: "agent_01test",
@@ -43,19 +43,12 @@ describe("createTeaConsultantGateway", () => {
       });
 
       const gateway = createTeaConsultantGateway(mockClient, mockConfig);
-      const session = await gateway.createSession("Minha conversa");
+      await gateway.createSession("Minha conversa");
 
       expect(mockSessionCreate).toHaveBeenCalledOnce();
       const callArg = mockSessionCreate.mock.calls[0][0];
       expect(callArg.agent_id).toBe("agent_01test");
       expect(callArg.environment_id).toBe("env_01test");
-      // Memory store deve estar no array de resources
-      const memResource = callArg.resources?.find(
-        (r: { type: string }) => r.type === "memory_store",
-      );
-      expect(memResource).toBeDefined();
-      expect(memResource.memory_store_id).toBe("memstore_01test");
-      expect(memResource.mode).toBe("read_only");
     });
 
     it("deve retornar ManagedSession com id, agentId e createdAt", async () => {

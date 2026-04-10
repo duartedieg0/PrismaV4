@@ -18,6 +18,6 @@ export function getAgentConfig(): AgentConfig {
   return {
     agentId: process.env.MANAGED_AGENT_ID!,
     environmentId: process.env.MANAGED_AGENT_ENVIRONMENT_ID!,
-    memoryStoreId: process.env.MANAGED_AGENT_MEMORY_STORE_ID!,
+    memoryStoreId: process.env.MANAGED_AGENT_MEMORY_STORE_ID,
   };
 }

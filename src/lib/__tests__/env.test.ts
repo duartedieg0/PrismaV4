@@ -12,7 +12,6 @@ const MANAGED_ENV: Record<string, string> = {
   MANAGED_AGENT_ID: "agent_01abc",
   ANTHROPIC_API_KEY: "sk-ant-abc",
   MANAGED_AGENT_ENVIRONMENT_ID: "env_01abc",
-  MANAGED_AGENT_MEMORY_STORE_ID: "memstore_01abc",
 };
 
 describe("getServerEnv", () => {
@@ -50,7 +49,6 @@ describe("getServerEnv", () => {
     }
     vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
     vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
-    vi.stubEnv("MANAGED_AGENT_MEMORY_STORE_ID", "memstore_01abc");
     // ANTHROPIC_API_KEY ausente intencionalmente
 
     expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
@@ -62,21 +60,20 @@ describe("getServerEnv", () => {
     }
     vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
     vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
-    vi.stubEnv("MANAGED_AGENT_MEMORY_STORE_ID", "memstore_01abc");
     // MANAGED_AGENT_ENVIRONMENT_ID ausente intencionalmente
 
     expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
   });
 
-  it("deve falhar quando MANAGED_AGENT_ID presente mas MANAGED_AGENT_MEMORY_STORE_ID ausente", () => {
+  it("deve passar quando MANAGED_AGENT_ID presente sem MANAGED_AGENT_MEMORY_STORE_ID (Memory Store opcional)", () => {
     for (const [key, value] of Object.entries(BASE_ENV)) {
       vi.stubEnv(key, value);
     }
     vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
     vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
     vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
-    // MANAGED_AGENT_MEMORY_STORE_ID ausente intencionalmente
+    // MANAGED_AGENT_MEMORY_STORE_ID ausente — agora é opcional
 
-    expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
+    expect(() => getServerEnv()).not.toThrow();
   });
 });

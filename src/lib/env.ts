@@ -28,7 +28,6 @@ const serverEnvSchema = z
     const required: [keyof typeof data, string | undefined][] = [
       ["ANTHROPIC_API_KEY", data.ANTHROPIC_API_KEY],
       ["MANAGED_AGENT_ENVIRONMENT_ID", data.MANAGED_AGENT_ENVIRONMENT_ID],
-      ["MANAGED_AGENT_MEMORY_STORE_ID", data.MANAGED_AGENT_MEMORY_STORE_ID],
     ];
 
     for (const [key, value] of required) {

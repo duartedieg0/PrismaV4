@@ -32,15 +32,6 @@ export function createTeaConsultantGateway(
         const session = await (client.beta.sessions as any).create({
           agent_id: config.agentId,
           environment_id: config.environmentId,
-          resources: [
-            {
-              type: "memory_store",
-              memory_store_id: config.memoryStoreId,
-              mode: "read_only",
-              prompt:
-                "Base de conhecimento sobre TEA e adaptação de avaliações. Consulte SEMPRE antes de responder perguntas do professor.",
-            },
-          ],
         });
 
         return {

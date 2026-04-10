@@ -19,5 +19,5 @@ export interface SessionMessage {
 export interface AgentConfig {
   agentId: string;
   environmentId: string;
-  memoryStoreId: string;
+  memoryStoreId?: string;
 }
