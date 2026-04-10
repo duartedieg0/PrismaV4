@@ -60,48 +60,60 @@ export function createTeaConsultantGateway(
       sessionId: string,
       message: string,
     ): Promise<AsyncIterable<ManagedEvent>> {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const events = client.beta.sessions.events as any;
+
+      let stream: AsyncIterable<ManagedEvent>;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const events = client.beta.sessions.events as any;
+        // Stream is opened first to ensure the response is captured before the message is sent.
+        // The beta API is expected to buffer events until the stream consumer starts reading.
+        // If events are lost in integration testing, consider an alternative approach where
+        // the caller opens the stream and sends the message in the same operation.
+        stream = await events.stream(sessionId);
+      } catch (error) {
+        const status = (error as { status?: number }).status;
+        if (status === 404) throw new SessionNotFoundError(sessionId);
+        throw new SessionStreamError(String(error));
+      }
 
-        // Abrir stream antes de enviar a mensagem
-        const stream = await events.stream(sessionId);
-
-        // Enviar a mensagem do usuário
+      try {
         await events.send(sessionId, {
           type: "user.message",
           content: [{ type: "text", text: message }],
         });
-
-        return stream as AsyncIterable<ManagedEvent>;
       } catch (error) {
-        const status = (error as { status?: number }).status;
-        if (status === 404) {
-          throw new SessionNotFoundError(sessionId);
-        }
-        throw new SessionStreamError(String(error));
+        throw new SessionStreamError(`Falha ao enviar mensagem: ${String(error)}`);
       }
+
+      return stream;
     },
 
     async getSessionMessages(sessionId: string): Promise<SessionMessage[]> {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await (client.beta.sessions.events as any).list(sessionId);
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const result = await (client.beta.sessions.events as any).list(sessionId);
 
-      const events: Array<{
-        id: string;
-        type: string;
-        content?: Array<{ type: string; text?: string }>;
-        created_at: string;
-      }> = result.data ?? result;
+        const events: Array<{
+          id: string;
+          type: string;
+          content?: Array<{ type: string; text?: string }>;
+          created_at: string;
+        }> = result.data ?? result;
 
-      return events
-        .filter((e) => e.type === "user.message" || e.type === "agent.message")
-        .map((e) => ({
-          id: e.id,
-          role: e.type === "user.message" ? ("user" as const) : ("assistant" as const),
-          content: extractTextContent(e.content),
-          createdAt: e.created_at,
-        }));
+        return events
+          .filter((e) => e.type === "user.message" || e.type === "agent.message")
+          .map((e) => ({
+            id: e.id,
+            role: e.type === "user.message" ? ("user" as const) : ("assistant" as const),
+            content: extractTextContent(e.content),
+            createdAt: e.created_at,
+          }));
+      } catch (error) {
+        throw new ManagedAgentError(
+          `Falha ao listar mensagens da sessão: ${String(error)}`,
+          "SESSION_MESSAGES_ERROR",
+        );
+      }
     },
   };
 }

@@ -175,6 +175,16 @@ describe("createTeaConsultantGateway", () => {
       expect(messages).toEqual([]);
     });
 
+    it("deve lançar ManagedAgentError quando listagem de eventos falha", async () => {
+      mockEventsList.mockRejectedValue(new Error("API error"));
+
+      const gateway = createTeaConsultantGateway(mockClient, mockConfig);
+
+      await expect(
+        gateway.getSessionMessages("sess_01abc"),
+      ).rejects.toBeInstanceOf(ManagedAgentError);
+    });
+
     it("deve concatenar múltiplos blocos de texto em um único content", async () => {
       mockEventsList.mockResolvedValue({
         data: [
