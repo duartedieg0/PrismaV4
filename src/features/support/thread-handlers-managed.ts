@@ -92,10 +92,11 @@ export async function managedGetMessages(
 
   if (threadError || !thread) return apiNotFound("Conversa não encontrada.");
 
+  const sessionId = (thread as Record<string, unknown>).managed_session_id as string | null;
+  if (!sessionId) return apiSuccess({ messages: [] });
+
   try {
-    const messages = await gateway.getSessionMessages(
-      (thread as Record<string, unknown>).managed_session_id as string,
-    );
+    const messages = await gateway.getSessionMessages(sessionId);
     return apiSuccess({ messages });
   } catch {
     return apiSuccess({ messages: [] });
