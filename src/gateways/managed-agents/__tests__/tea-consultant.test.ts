@@ -38,7 +38,7 @@ describe("createTeaConsultantGateway", () => {
     it("deve criar sessão com agentId e environmentId corretos", async () => {
       mockSessionCreate.mockResolvedValue({
         id: "sess_01abc",
-        agent_id: "agent_01test",
+        agent: { id: "agent_01test" },
         created_at: "2026-04-10T00:00:00Z",
       });
 
@@ -47,14 +47,14 @@ describe("createTeaConsultantGateway", () => {
 
       expect(mockSessionCreate).toHaveBeenCalledOnce();
       const callArg = mockSessionCreate.mock.calls[0][0];
-      expect(callArg.agent_id).toBe("agent_01test");
+      expect(callArg.agent).toBe("agent_01test");
       expect(callArg.environment_id).toBe("env_01test");
     });
 
     it("deve retornar ManagedSession com id, agentId e createdAt", async () => {
       mockSessionCreate.mockResolvedValue({
         id: "sess_01abc",
-        agent_id: "agent_01test",
+        agent: { id: "agent_01test" },
         created_at: "2026-04-10T00:00:00Z",
       });
 

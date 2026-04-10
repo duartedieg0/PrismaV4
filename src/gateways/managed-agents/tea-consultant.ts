@@ -30,13 +30,13 @@ export function createTeaConsultantGateway(
       try {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await (client.beta.sessions as any).create({
-          agent_id: config.agentId,
+          agent: config.agentId,
           environment_id: config.environmentId,
         });
 
         return {
           id: session.id as string,
-          agentId: session.agent_id as string,
+          agentId: (session.agent?.id ?? session.agent_id) as string,
           createdAt: session.created_at as string,
         };
       } catch (error) {
