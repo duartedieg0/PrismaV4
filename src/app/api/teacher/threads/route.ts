@@ -2,11 +2,17 @@ import { withTeacherRoute } from "@/features/support/with-teacher-route";
 import { apiSuccess, apiError } from "@/services/errors/api-response";
 import { getConsultantBackend } from "@/features/support/consultant-backend";
 import { mastraCreateThread } from "@/features/support/thread-handlers-mastra";
+import { managedCreateThread } from "@/features/support/thread-handlers-managed";
+import {
+  createTeaConsultantGateway,
+  createAnthropicClient,
+  getAgentConfig,
+} from "@/gateways/managed-agents";
 
 export const POST = withTeacherRoute(async (ctx, req) => {
   if (getConsultantBackend() === "managed") {
-    // Implementado na Task 4
-    return new Response("Managed backend não implementado ainda", { status: 501 });
+    const gateway = createTeaConsultantGateway(createAnthropicClient(), getAgentConfig());
+    return managedCreateThread(ctx, req, gateway);
   }
   return mastraCreateThread(ctx, req);
 });
