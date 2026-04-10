@@ -237,35 +237,46 @@ describe("Fluxo completo Managed Agents — integração", () => {
 
     const res = await managedStreamMessage(ctx, req, gateway);
     expect(res.status).toBe(200);
-    await expect(res.body?.cancel()).resolves.not.toThrow();
+
+    // Drain the stream and verify the error message was emitted
+    const reader = res.body!.getReader();
+    const decoder = new TextDecoder();
+    let streamContent = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      streamContent += decoder.decode(value);
+    }
+    expect(streamContent).toContain("Erro ao processar resposta");
   });
 
   // Cenário 6
-  it("C6: feature flag 'mastra' → zero chamadas ao gateway Managed", async () => {
+  it("C6: feature flag 'mastra' → handler Mastra não persiste managed_session_id", async () => {
     const { mastraCreateThread } = await import("@/features/support/thread-handlers-mastra");
-    const gateway = makeGateway();
 
-    const ctx: TeacherContext = {
-      supabase: {
-        from: vi.fn(() => ({
-          insert: vi.fn().mockReturnValue({
+    let insertedPayload: unknown;
+    const supabase = {
+      from: vi.fn(() => ({
+        insert: vi.fn((data: unknown) => {
+          insertedPayload = data;
+          return {
             select: vi.fn().mockReturnValue({
               single: vi.fn().mockResolvedValue({ data: { id: "thread-mastra" }, error: null }),
             }),
-          }),
-        })),
-      } as unknown as SupabaseClient,
-      userId: "user-001",
-    };
+          };
+        }),
+      })),
+    } as unknown as SupabaseClient;
+
+    const ctx: TeacherContext = { supabase, userId: "user-001" };
     const req = new Request("http://localhost/api/teacher/threads", {
       method: "POST",
       body: JSON.stringify({ agentSlug: "tea-consultant" }),
     });
 
-    await mastraCreateThread(ctx, req);
-
-    expect(gateway.createSession).not.toHaveBeenCalled();
-    expect(gateway.sendMessageAndStream).not.toHaveBeenCalled();
-    expect(gateway.getSessionMessages).not.toHaveBeenCalled();
+    const res = await mastraCreateThread(ctx, req);
+    expect(res.status).toBe(201);
+    // Mastra handler never persists managed_session_id — column not present in INSERT
+    expect((insertedPayload as Record<string, unknown>).managed_session_id).toBeUndefined();
   });
 });
