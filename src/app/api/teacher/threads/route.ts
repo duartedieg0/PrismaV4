@@ -1,42 +1,14 @@
-import { z } from "zod";
 import { withTeacherRoute } from "@/features/support/with-teacher-route";
-import { isValidAgentSlug } from "@/domains/support/contracts";
-import {
-  apiSuccess,
-  apiValidationError,
-  apiError,
-} from "@/services/errors/api-response";
+import { apiSuccess, apiError } from "@/services/errors/api-response";
+import { getConsultantBackend } from "@/features/support/consultant-backend";
+import { mastraCreateThread } from "@/features/support/thread-handlers-mastra";
 
-const createThreadSchema = z.object({
-  agentSlug: z.string().min(1),
-});
-
-export const POST = withTeacherRoute(async ({ supabase, userId }, request) => {
-  const body = await request.json();
-  const parsed = createThreadSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return apiValidationError(parsed.error);
+export const POST = withTeacherRoute(async (ctx, req) => {
+  if (getConsultantBackend() === "managed") {
+    // Implementado na Task 4
+    return new Response("Managed backend não implementado ainda", { status: 501 });
   }
-
-  if (!isValidAgentSlug(parsed.data.agentSlug)) {
-    return apiError("VALIDATION_ERROR", "Agente não encontrado.", 400);
-  }
-
-  const { data, error } = await supabase
-    .from("consultant_threads")
-    .insert({
-      teacher_id: userId,
-      agent_slug: parsed.data.agentSlug,
-    })
-    .select("id")
-    .single();
-
-  if (error) {
-    return apiError("INTERNAL_ERROR", "Erro ao criar conversa.", 500);
-  }
-
-  return apiSuccess({ threadId: data.id }, 201);
+  return mastraCreateThread(ctx, req);
 });
 
 export const GET = withTeacherRoute(async ({ supabase, userId }, request) => {
