@@ -17,10 +17,10 @@ const serverEnvSchema = z
       .enum(["debug", "info", "warn", "error", "silent"])
       .default("info"),
     // Managed Agents — opcionais individualmente, mas condicionalmente obrigatórias como grupo
-    ANTHROPIC_API_KEY: z.string().optional(),
-    MANAGED_AGENT_ID: z.string().optional(),
-    MANAGED_AGENT_ENVIRONMENT_ID: z.string().optional(),
-    MANAGED_AGENT_MEMORY_STORE_ID: z.string().optional(),
+    ANTHROPIC_API_KEY: z.string().min(1).optional(),
+    MANAGED_AGENT_ID: z.string().min(1).optional(),
+    MANAGED_AGENT_ENVIRONMENT_ID: z.string().min(1).optional(),
+    MANAGED_AGENT_MEMORY_STORE_ID: z.string().min(1).optional(),
   })
   .superRefine((data, ctx) => {
     if (!data.MANAGED_AGENT_ID) return;
