@@ -227,6 +227,8 @@ export async function managedStreamMessage(
 
   // 5. Background: gerar título na primeira mensagem + atualizar updated_at
   const threadTitle = (thread as Record<string, unknown>).title as string | null;
+  // after() fires after the response body is fully sent, at which point
+  // the execute() callback above has completed and fullResponse is fully populated.
   after(async () => {
     try {
       if (!threadTitle) {
@@ -242,12 +244,16 @@ export async function managedStreamMessage(
           .eq("id", threadId);
       }
     } catch {
-      const title =
-        userContent.length <= 80 ? userContent : userContent.slice(0, 77) + "...";
-      await ctx.supabase
-        .from("consultant_threads")
-        .update({ title, updated_at: new Date().toISOString() })
-        .eq("id", threadId);
+      if (!threadTitle) {
+        // generateThreadTitle failed — use truncated user message as fallback title
+        const title =
+          userContent.length <= 80 ? userContent : userContent.slice(0, 77) + "...";
+        await ctx.supabase
+          .from("consultant_threads")
+          .update({ title, updated_at: new Date().toISOString() })
+          .eq("id", threadId);
+      }
+      // If thread already had a title, silently swallow the updated_at error
     }
   });
 
