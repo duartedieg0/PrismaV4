@@ -1,7 +1,5 @@
 import { withTeacherRoute } from "@/features/support/with-teacher-route";
 import { apiSuccess, apiError } from "@/services/errors/api-response";
-import { getConsultantBackend } from "@/features/support/consultant-backend";
-import { mastraCreateThread } from "@/features/support/thread-handlers-mastra";
 import { managedCreateThread } from "@/features/support/thread-handlers-managed";
 import {
   createTeaConsultantGateway,
@@ -10,11 +8,8 @@ import {
 } from "@/gateways/managed-agents";
 
 export const POST = withTeacherRoute(async (ctx, req) => {
-  if (getConsultantBackend() === "managed") {
-    const gateway = createTeaConsultantGateway(createAnthropicClient(), getAgentConfig());
-    return managedCreateThread(ctx, req, gateway);
-  }
-  return mastraCreateThread(ctx, req);
+  const gateway = createTeaConsultantGateway(createAnthropicClient(), getAgentConfig());
+  return managedCreateThread(ctx, req, gateway);
 });
 
 export const GET = withTeacherRoute(async ({ supabase, userId }, request) => {
@@ -30,25 +25,15 @@ export const GET = withTeacherRoute(async ({ supabase, userId }, request) => {
     .order("updated_at", { ascending: false })
     .limit(limit + 1);
 
-  if (agentSlug) {
-    query = query.eq("agent_slug", agentSlug);
-  }
-
-  if (cursor) {
-    query = query.lt("updated_at", cursor);
-  }
+  if (agentSlug) query = query.eq("agent_slug", agentSlug);
+  if (cursor) query = query.lt("updated_at", cursor);
 
   const { data, error } = await query;
-
-  if (error) {
-    return apiError("INTERNAL_ERROR", "Erro ao listar conversas.", 500);
-  }
+  if (error) return apiError("INTERNAL_ERROR", "Erro ao listar conversas.", 500);
 
   const hasMore = (data?.length ?? 0) > limit;
   const threads = data?.slice(0, limit) ?? [];
-  const nextCursor = hasMore
-    ? threads[threads.length - 1]?.updated_at
-    : null;
+  const nextCursor = hasMore ? threads[threads.length - 1]?.updated_at : null;
 
   return apiSuccess({ threads, nextCursor });
 });

@@ -253,33 +253,4 @@ describe("Fluxo completo Managed Agents — integração", () => {
     expect(streamContent).toContain("Erro ao processar resposta");
   });
 
-  // Cenário 6
-  it("C6: feature flag 'mastra' → handler Mastra não persiste managed_session_id", async () => {
-    const { mastraCreateThread } = await import("@/features/support/thread-handlers-mastra");
-
-    let insertedPayload: unknown;
-    const supabase = {
-      from: vi.fn(() => ({
-        insert: vi.fn((data: unknown) => {
-          insertedPayload = data;
-          return {
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: { id: "thread-mastra" }, error: null }),
-            }),
-          };
-        }),
-      })),
-    } as unknown as SupabaseClient;
-
-    const ctx: TeacherContext = { supabase, userId: "user-001" };
-    const req = new Request("http://localhost/api/teacher/threads", {
-      method: "POST",
-      body: JSON.stringify({ agentSlug: "tea-consultant" }),
-    });
-
-    const res = await mastraCreateThread(ctx, req);
-    expect(res.status).toBe(201);
-    // Mastra handler never persists managed_session_id — column not present in INSERT
-    expect((insertedPayload as Record<string, unknown>).managed_session_id).toBeUndefined();
-  });
 });
