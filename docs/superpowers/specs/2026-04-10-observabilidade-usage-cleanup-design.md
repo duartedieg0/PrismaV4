@@ -117,6 +117,9 @@ Ambos os endpoints protegidos por `withAdminRoute`.
 Retorna totais globais + lista de usuários com agregados.
 
 **Resposta:**
+
+> `sessions` = `COUNT(*)` de threads onde `managed_session_id IS NOT NULL` (uma thread = uma sessão neste contexto).
+
 ```json
 {
   "data": {
