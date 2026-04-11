@@ -11,6 +11,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "eyJhbGciOi...");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret-key-123");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     const env = getServerEnv();
 
@@ -24,6 +27,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
   });
@@ -32,6 +38,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "not-a-url");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
   });
@@ -40,6 +49,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
   });
@@ -49,6 +61,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon-key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     const env = getServerEnv();
 
@@ -59,6 +74,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
     vi.stubEnv("SENTRY_DSN", "https://abc@sentry.io/123");
 
     const env = getServerEnv();
@@ -70,6 +88,9 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     const env = getServerEnv();
 
@@ -80,10 +101,46 @@ describe("getServerEnv", () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
     vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
 
     const first = getServerEnv();
     const second = getServerEnv();
 
     expect(first).toBe(second);
+  });
+
+  it("throws when ANTHROPIC_API_KEY is missing", () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
+    vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
+
+    expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
+  });
+
+  it("throws when MANAGED_AGENT_ID is missing", () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
+    vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "env_01abc");
+
+    expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
+  });
+
+  it("throws when MANAGED_AGENT_ENVIRONMENT_ID is missing", () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://abc.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "key");
+    vi.stubEnv("SUPABASE_SECRET_API_KEY", "secret");
+    vi.stubEnv("ANTHROPIC_API_KEY", "sk-ant-abc");
+    vi.stubEnv("MANAGED_AGENT_ID", "agent_01abc");
+    vi.stubEnv("MANAGED_AGENT_ENVIRONMENT_ID", "");
+
+    expect(() => getServerEnv()).toThrow("Falha na validacao de variaveis de ambiente");
   });
 });
