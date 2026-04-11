@@ -20,6 +20,14 @@ vi.mock("next/server", async (importOriginal) => {
   };
 });
 
+vi.mock("@/gateways/managed-agents", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/gateways/managed-agents")>();
+  return {
+    ...actual,
+    syncSessionUsage: vi.fn().mockResolvedValue(undefined),
+  };
+});
+
 vi.mock("@/mastra/providers/provider-factory", () => ({
   createMastraModel: vi.fn(() => ({ modelId: "mock-model" })),
 }));

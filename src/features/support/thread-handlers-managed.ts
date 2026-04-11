@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { after } from "next/server";
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
+import type Anthropic from "@anthropic-ai/sdk";
 import { isValidAgentSlug } from "@/domains/support/contracts";
 import { generateThreadTitle } from "@/features/support/thread-title";
 import { createMastraModel } from "@/mastra/providers/provider-factory";
@@ -13,6 +14,9 @@ import {
 } from "@/services/errors/api-response";
 import type { TeacherContext } from "@/features/support/with-teacher-route";
 import type { TeaConsultantGateway, ManagedEvent } from "@/gateways/managed-agents";
+import { syncSessionUsage } from "@/gateways/managed-agents";
+import { logError } from "@/services/observability/logger";
+import { createRequestContext } from "@/services/runtime/request-context";
 
 const createThreadSchema = z.object({
   agentSlug: z.string().min(1),
@@ -130,6 +134,7 @@ export async function managedStreamMessage(
   ctx: TeacherContext,
   req: Request,
   gateway: TeaConsultantGateway,
+  anthropic: Anthropic,
 ): Promise<Response> {
   const url = new URL(req.url);
   const segments = url.pathname.split("/");
@@ -254,6 +259,13 @@ export async function managedStreamMessage(
           .eq("id", threadId);
       }
       // If thread already had a title, silently swallow the updated_at error
+    }
+
+    // Sincronizar usage em background — erro é logado e swallowed
+    try {
+      await syncSessionUsage(anthropic, ctx.supabase, threadId, managedSessionId);
+    } catch (error) {
+      logError("Erro ao sincronizar usage da sessão", createRequestContext(), error);
     }
   });
 

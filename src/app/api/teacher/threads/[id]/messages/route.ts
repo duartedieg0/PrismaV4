@@ -12,8 +12,9 @@ export const maxDuration = 300;
 
 export const POST = withTeacherRoute(async (ctx, req) => {
   if (getConsultantBackend() === "managed") {
-    const gateway = createTeaConsultantGateway(createAnthropicClient(), getAgentConfig());
-    return managedStreamMessage(ctx, req, gateway);
+    const client = createAnthropicClient();
+    const gateway = createTeaConsultantGateway(client, getAgentConfig());
+    return managedStreamMessage(ctx, req, gateway, client);
   }
   return mastraStreamMessage(ctx, req);
 });
