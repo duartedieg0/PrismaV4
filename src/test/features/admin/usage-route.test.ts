@@ -10,10 +10,28 @@ vi.mock("@/features/admin/shared/admin-guard", () => ({
 vi.mock("@/gateways/supabase/server", () => ({
   createClient: vi.fn(async () => ({
     from(table: string) {
+      if (table === "profiles") {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: { full_name: "Maria Silva", email: "maria@escola.br" },
+                error: null,
+              }),
+            }),
+          }),
+        };
+      }
       if (table === "consultant_threads") {
         return {
-          select: vi.fn().mockReturnThis(),
-          not: threadsListResult,
+          select: vi.fn().mockReturnValue({
+            not: threadsListResult,
+            eq: vi.fn().mockReturnValue({
+              not: vi.fn().mockReturnValue({
+                order: threadsListResult,
+              }),
+            }),
+          }),
         };
       }
       throw new Error(`Unexpected table: ${table}`);
@@ -95,9 +113,43 @@ describe("GET /api/admin/usage/[userId]", () => {
     requireAdminRouteAccess.mockResolvedValue({ kind: "ok", userId: "admin-1" });
   });
 
-  it("deve retornar dados do usuário e suas threads", async () => {
+  it("deve retornar dados do usuário e lista de threads", async () => {
+    threadsListResult.mockResolvedValue({
+      data: [
+        {
+          id: "thread-1",
+          title: "Adaptação de questões",
+          total_input_tokens: 5000,
+          total_output_tokens: 3200,
+          total_cache_read_tokens: 20000,
+          total_cache_creation_tokens: 2000,
+          estimated_cost_usd: 0.063,
+          updated_at: "2026-04-10T10:00:00Z",
+        },
+      ],
+      error: null,
+    });
+
     const { GET: GETUser } = await import("@/app/api/admin/usage/[userId]/route");
-    // Testar depois de criar o arquivo
-    expect(GETUser).toBeDefined();
+    const req = new Request("http://localhost/api/admin/usage/user-1");
+    const res = await GETUser(req);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.data.user.name).toBe("Maria Silva");
+    expect(body.data.threads).toHaveLength(1);
+    expect(body.data.threads[0].threadId).toBe("thread-1");
+    expect(body.data.threads[0].estimatedCostUSD).toBeCloseTo(0.063, 5);
+  });
+
+  it("deve retornar 401 para não-admin", async () => {
+    requireAdminRouteAccess.mockResolvedValue({
+      kind: "error",
+      response: new Response(null, { status: 401 }),
+    });
+
+    const { GET: GETUser } = await import("@/app/api/admin/usage/[userId]/route");
+    const res = await GETUser(new Request("http://localhost/api/admin/usage/user-1"));
+    expect(res.status).toBe(401);
   });
 });
