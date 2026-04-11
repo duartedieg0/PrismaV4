@@ -18,7 +18,7 @@ export const GET = withAdminRoute(async ({ supabase }) => {
   const userMap = new Map<string, AdminUsageUser>();
 
   for (const thread of threads) {
-    const profile = thread.profiles as { full_name: string | null; email: string | null } | null;
+    const profile = thread.profiles as unknown as { full_name: string | null; email: string | null } | null;
     const cost = (thread.estimated_cost_usd as number) ?? 0;
     const updatedAt = thread.updated_at as string;
 

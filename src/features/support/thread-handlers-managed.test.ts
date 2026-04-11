@@ -1,8 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TeacherContext } from "./with-teacher-route";
 import type { TeaConsultantGateway } from "@/gateways/managed-agents";
 import type { ManagedSession } from "@/gateways/managed-agents";
+
+const mockAnthropicClient = {} as Anthropic;
 
 // Captured after() callbacks — run them manually after consuming stream
 const afterCallbacks: Array<() => Promise<void>> = [];
@@ -395,7 +398,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "Como adaptar?" }],
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
 
     expect(res.status).toBe(200);
     const ct = res.headers.get("content-type") ?? "";
@@ -417,7 +420,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "Pergunta do professor" }],
     });
 
-    await managedStreamMessage(ctx, req, gateway);
+    await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
 
     expect(sendMock).toHaveBeenCalledWith("sess_XYZ", "Pergunta do professor");
   });
@@ -431,7 +434,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "" }],
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     expect(res.status).toBe(400);
   });
 
@@ -444,7 +447,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "x".repeat(2001) }],
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     expect(res.status).toBe(400);
   });
 
@@ -457,7 +460,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "Pergunta" }],
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     expect(res.status).toBe(404);
   });
 
@@ -482,7 +485,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "Primeira pergunta" }],
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     // Fully consume the stream so execute() completes and fullResponse is populated
     const reader = res.body!.getReader();
     while (!(await reader.read()).done) { /* drain */ }
@@ -514,7 +517,7 @@ describe("managedStreamMessage", () => {
       messages: [{ role: "user", content: "Segunda pergunta" }],
     });
 
-    await managedStreamMessage(ctx, req, gateway);
+    await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     // Run any captured after() callbacks
     await runAfterCallbacks();
     expect(generateThreadTitle).not.toHaveBeenCalled();

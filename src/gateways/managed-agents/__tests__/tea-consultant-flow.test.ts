@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { TeacherContext } from "@/features/support/with-teacher-route";
 import type { TeaConsultantGateway, SessionMessage, ManagedSession } from "@/gateways/managed-agents";
+
+const mockAnthropicClient = {} as Anthropic;
 
 // Capture after() callbacks so we can drain the stream first, then run them
 const afterCallbacks: Array<() => Promise<void>> = [];
@@ -156,7 +159,7 @@ describe("Fluxo completo Managed Agents — integração", () => {
       body: JSON.stringify({ messages: [{ role: "user", content: "Como adaptar provas para TEA?" }] }),
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     expect(res.status).toBe(200);
 
     // Drain the stream body so execute() completes and fullResponse is populated
@@ -189,7 +192,7 @@ describe("Fluxo completo Managed Agents — integração", () => {
       body: JSON.stringify({ messages: [{ role: "user", content: "Segunda pergunta" }] }),
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     // Drain stream and run after() callbacks to ensure title logic has run
     const reader = res.body!.getReader();
     while (!(await reader.read()).done) { /* drain */ }
@@ -235,7 +238,7 @@ describe("Fluxo completo Managed Agents — integração", () => {
       body: JSON.stringify({ messages: [{ role: "user", content: "Pergunta" }] }),
     });
 
-    const res = await managedStreamMessage(ctx, req, gateway);
+    const res = await managedStreamMessage(ctx, req, gateway, mockAnthropicClient);
     expect(res.status).toBe(200);
 
     // Drain the stream and verify the error message was emitted

@@ -16,6 +16,7 @@ import {
   Users,
   User,
   LogOut,
+  BarChart3,
 } from "lucide-react";
 
 type AdminNavId =
@@ -25,7 +26,8 @@ type AdminNavId =
   | "supports"
   | "subjects"
   | "grade-levels"
-  | "users";
+  | "users"
+  | "usage";
 
 type AdminShellProps = Readonly<{
   title: string;
@@ -50,6 +52,7 @@ const navigationItems = [
   { id: "subjects" as const, label: "Disciplinas", href: "/config/subjects", icon: BookOpen },
   { id: "grade-levels" as const, label: "Anos/Séries", href: "/config/grade-levels", icon: GraduationCap },
   { id: "users" as const, label: "Usuários", href: "/users", icon: Users },
+  { id: "usage" as const, label: "Usage", href: "/usage", icon: BarChart3 },
 ];
 
 export function AdminShell({
