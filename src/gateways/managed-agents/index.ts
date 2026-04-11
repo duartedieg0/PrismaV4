@@ -13,3 +13,4 @@ export type {
   SessionMessage,
   AgentConfig,
 } from "./types";
+export { syncSessionUsage, CLAUDE_PRICING } from "./usage";
