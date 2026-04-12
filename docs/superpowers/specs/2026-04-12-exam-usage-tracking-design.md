@@ -57,6 +57,7 @@ CREATE UNIQUE INDEX exam_usage_exam_stage_idx ON exam_usage (exam_id, stage);
 - Um registro por prova por etapa.
 - `UNIQUE (exam_id, stage)` permite `upsert` seguro em caso de re-run.
 - Cascade delete garante limpeza automática ao excluir uma prova.
+- A tabela `exams` possui coluna `user_id` (referência ao usuário dono da prova), usada nos queries do admin para agregar por usuário via `exam_usage JOIN exams ON exams.id = exam_usage.exam_id`.
 
 ### Sem alterações em `exams`, `questions` ou `adaptations`.
 
@@ -66,7 +67,7 @@ CREATE UNIQUE INDEX exam_usage_exam_stage_idx ON exam_usage (exam_id, stage);
 
 ### 1. Pricing por modelo — `src/gateways/managed-agents/usage.ts`
 
-Expandir o arquivo existente para suportar pricing por model ID:
+Expandir o arquivo existente para suportar pricing por model ID. O `model_id` armazenado e passado a `calculateSimpleCost` é sempre `AiModelRecord.modelId` (ex: `"claude-sonnet-4-6"`), **nunca** o formato qualificado do Mastra (`"anthropic/claude-sonnet-4-6"` produzido por `toMastraModelId()`).
 
 ```ts
 type ModelPricing = {
@@ -98,31 +99,34 @@ export function calculateSimpleCost(
 }
 ```
 
-`CLAUDE_PRICING` e `syncSessionUsage()` permanecem sem alteração (Managed Agents usa cache tokens que o Mastra não expõe).
+`CLAUDE_PRICING` é removido. `syncSessionUsage()` passa a chamar `getPricingForModel("claude-sonnet-4-6")` diretamente para obter os quatro campos de pricing (input, output, cacheRead, cacheCreation) — sem alteração funcional. Qualquer outro consumidor de `CLAUDE_PRICING` no codebase deve ser atualizado para usar `getPricingForModel()`.
 
 ---
 
 ### 2. Agent runners retornam `usage`
 
-Modificar os runners para retornar o usage junto ao resultado estruturado.
+Modificar os runners para retornar o usage junto ao resultado estruturado. `response.usage` pode ser `undefined` em situações excepcionais; tratar como `{ promptTokens: 0, completionTokens: 0 }` via `response.usage ?? { promptTokens: 0, completionTokens: 0 }`.
 
 **`src/mastra/agents/extraction-agent-runner.ts`**
 
 ```ts
-// Antes: return extractionOutputSchema.parse(response.object);
-// Depois:
+const usage = response.usage ?? { promptTokens: 0, completionTokens: 0 };
 return {
   ...extractionOutputSchema.parse(response.object),
   usage: {
-    inputTokens: response.usage.promptTokens,
-    outputTokens: response.usage.completionTokens,
+    inputTokens: usage.promptTokens,
+    outputTokens: usage.completionTokens,
   },
 };
 ```
 
+O tipo de retorno de `runPdfExtractionAgent` passa a incluir `usage: { inputTokens: number; outputTokens: number }`.
+
 **`src/mastra/agents/analysis-agent-runners.ts`**
 
-Mesma mudança em `runBnccAnalysisAgent()`, `runBloomAnalysisAgent()` e `runAdaptationAgent()` — cada função retorna `usage: { inputTokens, outputTokens }` junto ao resultado.
+Mesma mudança em `runBnccAnalysisAgent()`, `runBloomAnalysisAgent()` e `runAdaptationAgent()`.
+
+`runAdaptationAgent` tem dois caminhos internos (essay e objective), cada um com seu próprio `response` de `agent.generate()`. `usage` deve ser capturado do `response` efetivamente chamado em cada branch — a função retorna um único `usage: { inputTokens, outputTokens }` cobrindo a chamada que ocorreu.
 
 ---
 
@@ -130,6 +134,7 @@ Mesma mudança em `runBnccAnalysisAgent()`, `runBloomAnalysisAgent()` e `runAdap
 
 #### `src/mastra/workflows/extract-exam-workflow.ts`
 
+- `ExtractionWorkflowDependencies` atualiza o tipo de retorno de `runExtractionAgent` para incluir `usage: { inputTokens: number; outputTokens: number }`.
 - `ExtractionWorkflowDependencies` recebe nova dependência opcional:
   ```ts
   persistExamUsage?(input: {
@@ -141,13 +146,23 @@ Mesma mudança em `runBnccAnalysisAgent()`, `runBloomAnalysisAgent()` e `runAdap
     estimatedCostUsd: number;
   }): Promise<void>;
   ```
-- `startStep` passa `usage` e `modelId` no schema de saída.
-- `persistStep` chama `dependencies.persistExamUsage?.()` após persistir as questões.
+- `extractionPayloadSchema` é extendido com campo `usage` **no nível raiz** (ao lado de `metadata` e `payload`), pois `modelId` vem da etapa de resolução, não do agent:
+  ```ts
+  usage: z.object({
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    modelId: z.string(),
+  }),
+  ```
+  Apenas a definição base de `extractionPayloadSchema` precisa ser atualizada. O `persistStep.inputSchema` é definido como extensão de `extractionPayloadSchema` e herdará `usage` automaticamente — não é necessário (nem correto) re-adicionar `usage` no `inputSchema` do `persistStep`.
+- `startStep` popula `usage` e `modelId` no output.
+- `persistStep` chama `dependencies.persistExamUsage?.()` após persistir as questões (em ambos os caminhos: sucesso e erro — para contabilizar tokens mesmo em runs parciais).
 
 #### `src/mastra/workflows/analyze-and-adapt-workflow.ts`
 
-- Acumular `inputTokens` e `outputTokens` de todas as chamadas (BNCC + Bloom + adaptação) dentro do passo de execução.
-- Chamar `dependencies.persistExamUsage?.()` no passo final com o total e o `modelId` do modelo de adaptação.
+- Acumular tokens de todas as chamadas (BNCC + Bloom + adaptação) em contadores `totalInputTokens` e `totalOutputTokens` dentro do passo de execução.
+- **Modelo para `model_id`**: usar o `model.modelId` do `sharedModelRecord` (modelo de análise). Runs com múltiplos supports e modelos diferentes são considerados fora de escopo para esta feature — o custo acumulado é calculado pro-rata usando `calculateSimpleCost` por chamada com o `modelId` correto de cada chamada, somando os valores de custo. O `model_id` armazenado na linha de `exam_usage` é o do `sharedModelRecord` (representativo da run).
+- Chamar `dependencies.persistExamUsage?.()` no passo final, tanto no caminho de sucesso quanto no de erro (tokens já consumidos devem ser registrados independente do resultado).
 
 ---
 
@@ -195,9 +210,11 @@ export async function persistExamUsage(
 
 Executa dois queries em paralelo:
 1. Query existente em `consultant_threads` (inalterada).
-2. Novo query: `exam_usage` JOIN `exams` para obter `user_id`, agrupado por `user_id` e `stage`.
+2. Novo query: `exam_usage` JOIN `exams` via `exams.user_id` para agregar por usuário.
 
-Combina em `AdminUsageUser`:
+Executa os dois queries em paralelo com `Promise.all`. `lastActivityAt` é calculado como o máximo entre `updated_at` de threads e `created_at` de `exam_usage` — garante que usuários que só fazem extrações (sem threads) tenham `lastActivityAt` preenchido.
+
+Combina em `AdminUsageUser` atualizado em `src/features/admin/usage/contracts.ts`:
 
 ```ts
 type AdminUsageUser = {
@@ -211,20 +228,40 @@ type AdminUsageUser = {
     extraction: number;
     adaptation: number;
   };
-  estimatedCostUSD: number;    // soma total
+  estimatedCostUSD: number;    // soma total das três categorias
   lastActivityAt: string | null;
+};
+
+type AdminUsageTotals = {
+  sessions: number;            // total de threads (mantido)
+  examCount: number;           // total de provas com usage registrado
+  estimatedCostUSD: number;    // soma total incluindo extração e adaptação
 };
 ```
 
+Os componentes de UI que consomem `AdminUsageUser` precisam ser atualizados para lidar com os novos campos opcionais (`examCount`, `costByCategory`).
+
 ### `GET /api/admin/usage/[userId]`
 
-Adiciona seção `exams` na resposta, listando provas com `extractionCostUSD`, `adaptationCostUSD` e `totalCostUSD`.
+Adiciona seção `exams` na resposta. Novo tipo em `contracts.ts`:
+
+```ts
+type AdminUsageExam = {
+  examId: string;
+  topic: string | null;           // campo `topic` da tabela `exams`
+  status: string;                  // status atual da prova
+  extractionCostUSD: number;
+  adaptationCostUSD: number;
+  totalCostUSD: number;
+  createdAt: string;
+};
+```
 
 ---
 
 ## UI Admin
 
-- Coluna "Custo Total" exibida como antes.
+- Coluna "Custo Total" exibida como antes (valor total).
 - Ao expandir a linha de um usuário (ou via tooltip), exibir breakdown: **Consultant / Extração / Adaptação**.
 - Página de detalhe do usuário: tabela de provas ao lado da tabela de threads.
 
@@ -236,30 +273,34 @@ Adiciona seção `exams` na resposta, listando provas com `extractionCostUSD`, `
 POST /api/exams (upload PDF)
   └─ runExtraction()
       └─ createExtractExamWorkflow()
-          ├─ startStep: runPdfExtractionAgent() → { questions, usage }
+          ├─ startStep: runPdfExtractionAgent() → { questions, usage, modelId }
           └─ persistStep: persistExtraction() + persistExamUsage(stage="extraction")
+                          [chamado em ambos os caminhos: sucesso e erro]
 
 POST /api/exams/[id]/answers (submete respostas)
   └─ runAnalysisAndAdaptation()
       └─ createAnalyzeAndAdaptWorkflow()
-          ├─ executeStep: runBnccAnalysisAgent() + runBloomAnalysisAgent() + runAdaptationAgent() per question×support → acumula usage
+          ├─ executeStep: runBnccAnalysisAgent() + runBloomAnalysisAgent() + runAdaptationAgent()
+          │               por question×support → acumula tokens com calculateSimpleCost por chamada
           └─ persistStep: persistAdaptations() + persistExamUsage(stage="adaptation", totalUsage)
+                          [chamado em ambos os caminhos: sucesso e erro]
 ```
 
 ---
 
 ## Tratamento de Erros
 
-- Se `persistExamUsage` falhar, o fluxo não deve ser interrompido (uso é dado secundário).
-- Implementar com `try/catch` silencioso (log apenas) na camada de serviço.
+- Se `persistExamUsage` falhar, o fluxo não deve ser interrompido (uso é dado secundário). O `try/catch` silencioso (log apenas) deve ser colocado **na camada de serviço**, no wrapper que constrói a dependência `persistExamUsage` passada ao workflow — não dentro do `persistStep`. Isso mantém o workflow limpo e centraliza o tratamento de falhas de uso no serviço.
+- `persistExamUsage` é chamado tanto no caminho de sucesso quanto no de erro dos workflows — tokens já consumidos devem ser registrados mesmo em runs que falharam parcialmente.
 - Em caso de re-run (prova reprocessada), `upsert` sobrescreve o registro existente.
-- Se `response.usage` vier `undefined` do Mastra (improvável mas possível), tratar como `{ inputTokens: 0, outputTokens: 0 }`.
+- Se `response.usage` vier `undefined` do Mastra, tratar como `{ promptTokens: 0, completionTokens: 0 }`.
 
 ---
 
 ## Fora de Escopo
 
 - Rastreamento por questão individual ou por chamada de agente.
+- Breakdown de custo por support/modelo em runs de adaptação com múltiplos modelos.
 - Alertas ou limites de custo.
 - Exportação de relatórios de uso.
 - Suporte a provedores de AI não-Anthropic.
