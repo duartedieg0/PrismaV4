@@ -3,6 +3,12 @@ export type AdminUsageUser = {
   name: string | null;
   email: string | null;
   threadCount: number;
+  examCount: number;
+  costByCategory: {
+    consultant: number;
+    extraction: number;
+    adaptation: number;
+  };
   estimatedCostUSD: number;
   lastActivityAt: string | null;
 };
@@ -18,8 +24,19 @@ export type AdminUsageThread = {
   updatedAt: string;
 };
 
+export type AdminUsageExam = {
+  examId: string;
+  topic: string | null;
+  status: string;
+  extractionCostUSD: number;
+  adaptationCostUSD: number;
+  totalCostUSD: number;
+  createdAt: string;
+};
+
 export type AdminUsageTotals = {
   sessions: number;
+  examCount: number;
   estimatedCostUSD: number;
 };
 
@@ -31,4 +48,5 @@ export type AdminUsageSummary = {
 export type AdminUsageUserDetail = {
   user: { name: string | null; email: string | null };
   threads: AdminUsageThread[];
+  exams: AdminUsageExam[];
 };
