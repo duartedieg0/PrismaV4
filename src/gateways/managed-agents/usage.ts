@@ -4,10 +4,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // NOTE: Preços por 1M tokens do Claude Sonnet 4.6 — atualizar se Anthropic alterar a tabela de preços.
 // Referência: https://www.anthropic.com/pricing
 export const CLAUDE_PRICING = {
-  inputPerMillion: 3.00,
-  outputPerMillion: 15.00,
-  cacheReadPerMillion: 0.30,
-  cacheCreationPerMillion: 3.75,
+  inputPerMillion: 0.80,
+  outputPerMillion: 4.00,
+  cacheReadPerMillion: 0.08,
+  cacheCreationPerMillion: 1.00,
 } as const;
 
 export async function syncSessionUsage(
