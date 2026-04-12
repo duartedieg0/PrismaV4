@@ -47,5 +47,12 @@ export async function runPdfExtractionAgent(input: {
     },
   );
 
-  return extractionOutputSchema.parse(response.object);
+  const rawUsage = response.usage ?? { promptTokens: 0, completionTokens: 0 };
+  return {
+    ...extractionOutputSchema.parse(response.object),
+    usage: {
+      inputTokens: rawUsage.promptTokens,
+      outputTokens: rawUsage.completionTokens,
+    },
+  };
 }

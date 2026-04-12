@@ -28,6 +28,7 @@ describe("extraction agent runner", () => {
           },
         ],
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     const pdfData = new Uint8Array([1, 2, 3]);
@@ -73,5 +74,80 @@ describe("extraction agent runner", () => {
       visualElements: null,
       extractionWarning: null,
     });
+  });
+
+  it("returns usage tokens from the agent response", async () => {
+    const { runPdfExtractionAgent } = await import("@/mastra/agents/extraction-agent-runner");
+
+    extractionGenerate.mockResolvedValueOnce({
+      object: {
+        questions: [
+          {
+            orderNum: 1,
+            content: "Questão",
+            questionType: "objective",
+            alternatives: [{ label: "A", text: "Sim" }],
+            visualElements: null,
+            extractionWarning: null,
+          },
+        ],
+      },
+      usage: { promptTokens: 800, completionTokens: 200 },
+    });
+
+    const result = await runPdfExtractionAgent({
+      prompt: "Extraia as questões.",
+      model: {
+        id: "model-1",
+        name: "Sonnet",
+        provider: "anthropic",
+        modelId: "claude-sonnet-4-6",
+        baseUrl: "https://api.anthropic.com",
+        apiKey: "secret",
+        enabled: true,
+        isDefault: true,
+      },
+      pdfData: new Uint8Array([1, 2, 3]),
+      contentType: "application/pdf",
+    });
+
+    expect(result.usage).toEqual({ inputTokens: 800, outputTokens: 200 });
+  });
+
+  it("defaults usage to zero when response.usage is undefined", async () => {
+    const { runPdfExtractionAgent } = await import("@/mastra/agents/extraction-agent-runner");
+
+    extractionGenerate.mockResolvedValueOnce({
+      object: {
+        questions: [
+          {
+            orderNum: 1,
+            content: "Questão",
+            questionType: "objective",
+            alternatives: [{ label: "A", text: "Sim" }],
+            visualElements: null,
+            extractionWarning: null,
+          },
+        ],
+      },
+    });
+
+    const result = await runPdfExtractionAgent({
+      prompt: "Extraia as questões.",
+      model: {
+        id: "model-1",
+        name: "Sonnet",
+        provider: "anthropic",
+        modelId: "claude-sonnet-4-6",
+        baseUrl: "https://api.anthropic.com",
+        apiKey: "secret",
+        enabled: true,
+        isDefault: true,
+      },
+      pdfData: new Uint8Array([1, 2, 3]),
+      contentType: "application/pdf",
+    });
+
+    expect(result.usage).toEqual({ inputTokens: 0, outputTokens: 0 });
   });
 });
