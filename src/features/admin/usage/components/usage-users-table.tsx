@@ -37,7 +37,11 @@ export function UsageUsersTable({ users }: UsageUsersTableProps) {
                 <th align="left">Professor</th>
                 <th align="left">E-mail</th>
                 <th align="right">Conversas</th>
-                <th align="right">Custo estimado (USD)</th>
+                <th align="right">Provas</th>
+                <th align="right">Consultant (USD)</th>
+                <th align="right">Extração (USD)</th>
+                <th align="right">Adaptação (USD)</th>
+                <th align="right">Total (USD)</th>
               </tr>
             </thead>
             <tbody>
@@ -53,6 +57,16 @@ export function UsageUsersTable({ users }: UsageUsersTableProps) {
                   </td>
                   <td>{user.email ?? "—"}</td>
                   <td align="right">{user.threadCount}</td>
+                  <td align="right">{user.examCount}</td>
+                  <td align="right" className="font-mono text-sm">
+                    ${user.costByCategory.consultant.toFixed(4)}
+                  </td>
+                  <td align="right" className="font-mono text-sm">
+                    ${user.costByCategory.extraction.toFixed(4)}
+                  </td>
+                  <td align="right" className="font-mono text-sm">
+                    ${user.costByCategory.adaptation.toFixed(4)}
+                  </td>
                   <td align="right" className="font-mono text-sm">
                     ${user.estimatedCostUSD.toFixed(4)}
                   </td>

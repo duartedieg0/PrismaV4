@@ -3,6 +3,7 @@ import { requireAdminPageAccess } from "@/features/admin/shared/admin-guard";
 import { createClient } from "@/gateways/supabase/server";
 import { AdminShell } from "@/app-shell/admin/admin-shell";
 import { UsageThreadsTable } from "@/features/admin/usage/components/usage-threads-table";
+import { UsageExamsTable } from "@/features/admin/usage/components/usage-exams-table";
 import type { AdminUsageThread, AdminUsageExam } from "@/features/admin/usage/contracts";
 
 async function loadUserUsage(userId: string) {
@@ -93,12 +94,7 @@ export default async function AdminUsageUserPage({ params }: PageProps) {
     >
       <div className="flex flex-col gap-6">
         <UsageThreadsTable threads={threads} />
-        {/* TODO(Task 11): Add UsageExamsTable here — exams: {exams.length} */}
-        {exams.length > 0 && (
-          <p className="text-sm text-text-secondary">
-            {exams.length} prova(s) com uso registrado. (Tabela de provas será adicionada na Task 11.)
-          </p>
-        )}
+        <UsageExamsTable exams={exams} />
       </div>
     </AdminShell>
   );
