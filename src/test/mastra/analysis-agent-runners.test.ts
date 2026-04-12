@@ -31,6 +31,7 @@ describe("analysis agent runners", () => {
         skills: [" EF07MA01 ", "EF07MA02"],
         analysis: "A questão trabalha equivalência de frações.",
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     const result = await runBnccAnalysisAgent({
@@ -41,6 +42,7 @@ describe("analysis agent runners", () => {
     expect(result).toEqual({
       skills: ["EF07MA01", "EF07MA02"],
       analysis: "A questão trabalha equivalência de frações.",
+      usage: { inputTokens: 0, outputTokens: 0 },
     });
   });
 
@@ -52,6 +54,7 @@ describe("analysis agent runners", () => {
         level: "Aplicar",
         analysis: "O estudante aplica o conceito para resolver o problema.",
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     const result = await runBloomAnalysisAgent({
@@ -62,6 +65,7 @@ describe("analysis agent runners", () => {
     expect(result).toEqual({
       level: "Aplicar",
       analysis: "O estudante aplica o conceito para resolver o problema.",
+      usage: { inputTokens: 0, outputTokens: 0 },
     });
   });
 
@@ -76,6 +80,7 @@ describe("analysis agent runners", () => {
           { originalLabel: "B", text: "três quartos" },
         ],
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     const result = await runAdaptationAgent({
@@ -109,6 +114,7 @@ describe("analysis agent runners", () => {
           position: 1,
         },
       ],
+      usage: { inputTokens: 0, outputTokens: 0 },
     });
   });
 
@@ -123,6 +129,7 @@ describe("analysis agent runners", () => {
           { originalLabel: "C", text: "três quartos" },
         ],
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     const result = await runAdaptationAgent({
@@ -158,6 +165,7 @@ describe("analysis agent runners", () => {
           position: 1,
         },
       ],
+      usage: { inputTokens: 0, outputTokens: 0 },
     });
   });
 
@@ -172,6 +180,7 @@ describe("analysis agent runners", () => {
           { originalLabel: "B", text: "dois terços" },
         ],
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     await expect(
@@ -199,6 +208,7 @@ describe("analysis agent runners", () => {
           { originalLabel: "Z", text: "alternativa fantasma" },
         ],
       },
+      usage: { promptTokens: 0, completionTokens: 0 },
     });
 
     await expect(
@@ -213,5 +223,69 @@ describe("analysis agent runners", () => {
         correctAnswer: "B",
       }),
     ).rejects.toThrow('O agente retornou a alternativa "Z" que não existe na questão original.');
+  });
+
+  it("BNCC runner returns usage tokens", async () => {
+    const { runBnccAnalysisAgent } = await import("@/mastra/agents/analysis-agent-runners");
+
+    bnccGenerate.mockResolvedValueOnce({
+      object: { skills: ["EF07MA01"], analysis: "Análise." },
+      usage: { promptTokens: 600, completionTokens: 150 },
+    });
+
+    const result = await runBnccAnalysisAgent({ prompt: "Analise.", model: {} as never });
+
+    expect(result.usage).toEqual({ inputTokens: 600, outputTokens: 150 });
+  });
+
+  it("Bloom runner returns usage tokens", async () => {
+    const { runBloomAnalysisAgent } = await import("@/mastra/agents/analysis-agent-runners");
+
+    bloomGenerate.mockResolvedValueOnce({
+      object: { level: "Lembrar", analysis: "Análise." },
+      usage: { promptTokens: 400, completionTokens: 100 },
+    });
+
+    const result = await runBloomAnalysisAgent({ prompt: "Analise.", model: {} as never });
+
+    expect(result.usage).toEqual({ inputTokens: 400, outputTokens: 100 });
+  });
+
+  it("adaptation runner returns usage tokens for essay branch", async () => {
+    const { runAdaptationAgent } = await import("@/mastra/agents/analysis-agent-runners");
+
+    adaptationGenerate.mockResolvedValueOnce({
+      object: { adaptedContent: "Questão adaptada." },
+      usage: { promptTokens: 300, completionTokens: 80 },
+    });
+
+    const result = await runAdaptationAgent({
+      prompt: "Adapte.",
+      instructions: "Simplifique.",
+      model: {} as never,
+      alternatives: null,
+      correctAnswer: null,
+    });
+
+    expect(result.usage).toEqual({ inputTokens: 300, outputTokens: 80 });
+  });
+
+  it("adaptation runner defaults usage to zero when undefined", async () => {
+    const { runAdaptationAgent } = await import("@/mastra/agents/analysis-agent-runners");
+
+    adaptationGenerate.mockResolvedValueOnce({
+      object: { adaptedContent: "Questão adaptada." },
+      // usage absent
+    });
+
+    const result = await runAdaptationAgent({
+      prompt: "Adapte.",
+      instructions: "Simplifique.",
+      model: {} as never,
+      alternatives: null,
+      correctAnswer: null,
+    });
+
+    expect(result.usage).toEqual({ inputTokens: 0, outputTokens: 0 });
   });
 });

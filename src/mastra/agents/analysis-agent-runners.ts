@@ -96,10 +96,12 @@ export async function runBnccAnalysisAgent(input: {
     },
   });
   const result = bnccAnalysisSchema.parse(response.object);
+  const rawUsage = response.usage ?? { promptTokens: 0, completionTokens: 0 };
 
   return {
     skills: result.skills.map((skill) => skill.trim()).filter(Boolean),
     analysis: result.analysis.trim(),
+    usage: { inputTokens: rawUsage.promptTokens, outputTokens: rawUsage.completionTokens },
   };
 }
 
@@ -114,10 +116,12 @@ export async function runBloomAnalysisAgent(input: {
     },
   });
   const result = bloomAnalysisSchema.parse(response.object);
+  const rawUsage = response.usage ?? { promptTokens: 0, completionTokens: 0 };
 
   return {
     level: result.level,
     analysis: result.analysis.trim(),
+    usage: { inputTokens: rawUsage.promptTokens, outputTokens: rawUsage.completionTokens },
   };
 }
 
@@ -140,10 +144,12 @@ export async function runAdaptationAgent(input: {
       },
     });
     const result = essayAdaptationSchema.parse(response.object);
+    const rawUsage = response.usage ?? { promptTokens: 0, completionTokens: 0 };
 
     return {
       adaptedContent: result.adaptedContent.trim(),
       adaptedAlternatives: null,
+      usage: { inputTokens: rawUsage.promptTokens, outputTokens: rawUsage.completionTokens },
     };
   }
 
@@ -153,6 +159,7 @@ export async function runAdaptationAgent(input: {
     },
   });
   const result = objectiveAdaptationSchema.parse(response.object);
+  const rawUsage = response.usage ?? { promptTokens: 0, completionTokens: 0 };
 
   return {
     adaptedContent: result.adaptedStatement.trim(),
@@ -161,5 +168,6 @@ export async function runAdaptationAgent(input: {
       result.adaptedAlternatives,
       input.correctAnswer,
     ),
+    usage: { inputTokens: rawUsage.promptTokens, outputTokens: rawUsage.completionTokens },
   };
 }
