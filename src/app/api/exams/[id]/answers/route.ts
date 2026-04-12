@@ -246,6 +246,7 @@ export async function POST(request: Request, { params }: RouteContext) {
           runAdaptation: runAdaptationAgent,
           registerEvent: async () => {},
         },
+        bgSupabase,
       );
 
       if (result.outcome === "error") {

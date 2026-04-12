@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   AdaptationWorkflowFailure,
   AdaptationWorkflowSuccess,
@@ -6,11 +7,14 @@ import {
   createAnalyzeAndAdaptWorkflow,
   runAnalyzeAndAdaptWorkflow,
 } from "@/mastra/workflows/analyze-and-adapt-workflow";
+import { persistExamUsage as persistExamUsageGateway } from "@/gateways/exam-usage/persist";
 import { createPrismaMastraRuntime } from "@/mastra/runtime";
 
-type RunAnalysisAndAdaptationDependencies = Parameters<
-  typeof createAnalyzeAndAdaptWorkflow
->[0];
+// Deps without persistExamUsage — service injects it internally
+type RunAnalysisAndAdaptationDeps = Omit<
+  Parameters<typeof createAnalyzeAndAdaptWorkflow>[0],
+  "persistExamUsage"
+>;
 
 export async function runAnalysisAndAdaptation(
   input: {
@@ -18,9 +22,23 @@ export async function runAnalysisAndAdaptation(
     initiatedBy?: string;
     correlationId?: string;
   },
-  dependencies: RunAnalysisAndAdaptationDependencies,
+  dependencies: RunAnalysisAndAdaptationDeps,
+  supabase?: SupabaseClient,
 ): Promise<AdaptationWorkflowSuccess | AdaptationWorkflowFailure> {
-  const workflow = createAnalyzeAndAdaptWorkflow(dependencies);
+  const persistFn = supabase
+    ? async (usageInput: Parameters<typeof persistExamUsageGateway>[1]) => {
+        try {
+          await persistExamUsageGateway(supabase, usageInput);
+        } catch (err) {
+          console.error("[exam-usage] Failed to persist adaptation usage:", err);
+        }
+      }
+    : undefined;
+
+  const workflow = createAnalyzeAndAdaptWorkflow({
+    ...dependencies,
+    persistExamUsage: persistFn,
+  });
   const mastra = createPrismaMastraRuntime({
     analyzeAndAdaptWorkflow: workflow,
   });

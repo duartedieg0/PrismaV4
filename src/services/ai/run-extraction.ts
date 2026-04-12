@@ -1,3 +1,4 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
   ExtractionWorkflowInput,
   ExtractionWorkflowResult,
@@ -6,15 +7,34 @@ import {
   createExtractExamWorkflow,
   runExtractExamWorkflow,
 } from "@/mastra/workflows/extract-exam-workflow";
+import { persistExamUsage as persistExamUsageGateway } from "@/gateways/exam-usage/persist";
 import { createPrismaMastraRuntime } from "@/mastra/runtime";
 
-type RunExtractionDependencies = Parameters<typeof createExtractExamWorkflow>[0];
+// Deps without persistExamUsage — service injects it internally
+type RunExtractionDeps = Omit<
+  Parameters<typeof createExtractExamWorkflow>[0],
+  "persistExamUsage"
+>;
 
 export async function runExtraction(
   input: ExtractionWorkflowInput,
-  dependencies: RunExtractionDependencies,
+  dependencies: RunExtractionDeps,
+  supabase?: SupabaseClient,
 ): Promise<ExtractionWorkflowResult> {
-  const workflow = createExtractExamWorkflow(dependencies);
+  const persistFn = supabase
+    ? async (usageInput: Parameters<typeof persistExamUsageGateway>[1]) => {
+        try {
+          await persistExamUsageGateway(supabase, usageInput);
+        } catch (err) {
+          console.error("[exam-usage] Failed to persist extraction usage:", err);
+        }
+      }
+    : undefined;
+
+  const workflow = createExtractExamWorkflow({
+    ...dependencies,
+    persistExamUsage: persistFn,
+  });
   const mastra = createPrismaMastraRuntime({
     extractExamWorkflow: workflow,
   });

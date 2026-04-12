@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { runExtraction } from "@/services/ai/run-extraction";
 
 const defaultModel = {
@@ -36,6 +37,7 @@ describe("run extraction service", () => {
               extractionWarning: null,
             },
           ],
+          usage: { inputTokens: 100, outputTokens: 50 },
         }),
         persistExtraction: vi.fn().mockResolvedValue({
           warnings: [],
@@ -60,6 +62,7 @@ describe("run extraction service", () => {
         listModels: vi.fn().mockResolvedValue([defaultModel]),
         runExtractionAgent: vi.fn().mockResolvedValue({
           questions: [],
+          usage: { inputTokens: 100, outputTokens: 50 },
         }),
         persistExtraction: vi.fn().mockResolvedValue({
           warnings: [],
@@ -74,5 +77,40 @@ describe("run extraction service", () => {
     if (result.outcome === "error") {
       expect(result.failure.code).toBe("NO_VALID_QUESTIONS");
     }
+  });
+
+  it("does not throw when exam_usage upsert fails", async () => {
+    const failingSupabase = {
+      from: () => ({
+        upsert: () => Promise.reject(new Error("DB error")),
+      }),
+    } as unknown as SupabaseClient;
+
+    await expect(
+      runExtraction(
+        { examId: "exam-1", initiatedBy: "teacher-1", pdfPath: "teacher-1/exam-1.pdf" },
+        {
+          listModels: vi.fn().mockResolvedValue([defaultModel]),
+          runExtractionAgent: vi.fn().mockResolvedValue({
+            questions: [
+              {
+                orderNum: 1,
+                content: "Quanto é 2 + 2?",
+                questionType: "objective",
+                alternatives: [{ label: "A", text: "4" }],
+                visualElements: null,
+                extractionWarning: null,
+              },
+            ],
+            usage: { inputTokens: 100, outputTokens: 50 },
+          }),
+          persistExtraction: vi.fn().mockResolvedValue({ warnings: [], questionsCount: 1 }),
+          registerEvent: vi.fn(),
+        },
+        failingSupabase,
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({ outcome: "success" }),
+    );
   });
 });

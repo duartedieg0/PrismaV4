@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { runAnalysisAndAdaptation } from "@/services/ai/run-analysis-and-adaptation";
 
 const examContext = {
@@ -55,14 +56,17 @@ describe("run analysis and adaptation service", () => {
         runBnccAnalysis: vi.fn().mockResolvedValue({
           skills: ["EF07MA01"],
           analysis: "A questão trabalha soma de frações.",
+          usage: { inputTokens: 600, outputTokens: 150 },
         }),
         runBloomAnalysis: vi.fn().mockResolvedValue({
           level: "Aplicar",
           analysis: "O aluno aplica o conceito de frações.",
+          usage: { inputTokens: 400, outputTokens: 100 },
         }),
         runAdaptation: vi.fn().mockResolvedValue({
           adaptedContent: "Quanto é metade mais um quarto?",
           adaptedAlternatives: null,
+          usage: { inputTokens: 800, outputTokens: 200 },
         }),
         registerEvent: vi.fn(),
       },
@@ -73,5 +77,44 @@ describe("run analysis and adaptation service", () => {
       expect(result.processedQuestions).toBe(1);
       expect(result.adaptationStatus).toBe("completed");
     }
+  });
+
+  it("does not throw when exam_usage upsert fails", async () => {
+    const failingSupabase = {
+      from: () => ({
+        upsert: () => Promise.reject(new Error("DB error")),
+      }),
+    } as unknown as SupabaseClient;
+
+    await expect(
+      runAnalysisAndAdaptation(
+        { examId: "exam-1" },
+        {
+          loadExamContext: vi.fn().mockResolvedValue(examContext),
+          createPendingAdaptations: vi.fn().mockResolvedValue(undefined),
+          persistAdaptation: vi.fn().mockResolvedValue(undefined),
+          updateExamStatus: vi.fn().mockResolvedValue(undefined),
+          runBnccAnalysis: vi.fn().mockResolvedValue({
+            skills: ["EF07MA01"],
+            analysis: ".",
+            usage: { inputTokens: 100, outputTokens: 50 },
+          }),
+          runBloomAnalysis: vi.fn().mockResolvedValue({
+            level: "Aplicar",
+            analysis: ".",
+            usage: { inputTokens: 100, outputTokens: 50 },
+          }),
+          runAdaptation: vi.fn().mockResolvedValue({
+            adaptedContent: "Adaptado.",
+            adaptedAlternatives: null,
+            usage: { inputTokens: 100, outputTokens: 50 },
+          }),
+          registerEvent: vi.fn(),
+        },
+        failingSupabase,
+      ),
+    ).resolves.toEqual(
+      expect.objectContaining({ outcome: "success" }),
+    );
   });
 });

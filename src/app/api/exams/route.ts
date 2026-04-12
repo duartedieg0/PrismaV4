@@ -221,6 +221,7 @@ export async function POST(request: Request) {
             },
             registerEvent: async () => {},
           },
+          extractionSupabase,
         );
 
         if (extractionResult.outcome === "error") {
