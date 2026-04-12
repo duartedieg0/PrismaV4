@@ -14,6 +14,7 @@ import type { AiModelRecord } from "@/mastra/providers/model-registry";
 import { resolveExtractionModel, toMastraModelId } from "@/mastra/providers/model-registry";
 import { createPersistExtractionTool } from "@/mastra/tools/persist-extraction-tool";
 import { createRegisterRuntimeEventTool } from "@/mastra/tools/register-runtime-event-tool";
+import { calculateSimpleCost } from "@/gateways/managed-agents/usage";
 
 const extractionWorkflowInputSchema = z.object({
   examId: z.string(),
@@ -44,6 +45,11 @@ const extractionPayloadSchema = z.object({
         extractionWarning: z.string().nullable(),
       }),
     ),
+  }),
+  usage: z.object({
+    inputTokens: z.number(),
+    outputTokens: z.number(),
+    modelId: z.string(),
   }),
 });
 
@@ -87,6 +93,7 @@ type ExtractionWorkflowDependencies = {
       visualElements: Array<{ type: string; description: string }> | null;
       extractionWarning: string | null;
     }>;
+    usage: { inputTokens: number; outputTokens: number };
   }>;
   persistExtraction(input: {
     examId: string;
@@ -104,6 +111,14 @@ type ExtractionWorkflowDependencies = {
     warnings: string[];
     questionsCount: number;
   }>;
+  persistExamUsage?(input: {
+    examId: string;
+    stage: "extraction" | "adaptation";
+    modelId: string;
+    inputTokens: number;
+    outputTokens: number;
+    estimatedCostUsd: number;
+  }): Promise<void>;
   registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
 
@@ -170,6 +185,11 @@ export function createExtractExamWorkflow(
       return {
         metadata,
         payload,
+        usage: {
+          inputTokens: payload.usage?.inputTokens ?? 0,
+          outputTokens: payload.usage?.outputTokens ?? 0,
+          modelId: modelRecord.modelId,
+        },
       };
     },
   });
@@ -206,6 +226,18 @@ export function createExtractExamWorkflow(
           ...createExamEventRecord(inputData.metadata, "failed", failure),
         }, {});
 
+        await dependencies.persistExamUsage?.({
+          examId: inputData.metadata.examId,
+          stage: "extraction",
+          modelId: inputData.usage.modelId,
+          inputTokens: inputData.usage.inputTokens,
+          outputTokens: inputData.usage.outputTokens,
+          estimatedCostUsd: calculateSimpleCost(
+            { inputTokens: inputData.usage.inputTokens, outputTokens: inputData.usage.outputTokens },
+            inputData.usage.modelId,
+          ),
+        });
+
         return {
           outcome: "error" as const,
           metadata: inputData.metadata,
@@ -228,6 +260,18 @@ export function createExtractExamWorkflow(
       if (!persisted || !("warnings" in persisted) || !("questionsCount" in persisted)) {
         throw new Error("Falha ao persistir a extração.");
       }
+
+      await dependencies.persistExamUsage?.({
+        examId: inputData.metadata.examId,
+        stage: "extraction",
+        modelId: inputData.usage.modelId,
+        inputTokens: inputData.usage.inputTokens,
+        outputTokens: inputData.usage.outputTokens,
+        estimatedCostUsd: calculateSimpleCost(
+          { inputTokens: inputData.usage.inputTokens, outputTokens: inputData.usage.outputTokens },
+          inputData.usage.modelId,
+        ),
+      });
 
       return {
         outcome: "success" as const,

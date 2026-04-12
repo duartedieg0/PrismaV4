@@ -3,6 +3,8 @@ import { createExtractExamWorkflow, runExtractExamWorkflow } from "@/mastra/work
 
 describe("extract exam workflow", () => {
   it("persists a successful extraction and returns the canonical result", async () => {
+    const persistExamUsage = vi.fn().mockResolvedValue(undefined);
+
     const workflow = createExtractExamWorkflow({
       listModels: vi.fn().mockResolvedValue([
         {
@@ -30,11 +32,13 @@ describe("extract exam workflow", () => {
             extractionWarning: null,
           },
         ],
+        usage: { inputTokens: 1200, outputTokens: 300 },
       }),
       persistExtraction: vi.fn().mockResolvedValue({
         warnings: [],
         questionsCount: 1,
       }),
+      persistExamUsage,
       registerEvent: vi.fn(),
     });
 
@@ -51,6 +55,17 @@ describe("extract exam workflow", () => {
       expect(result.result.status).toBe("awaiting_answers");
       expect(result.result.questionsCount).toBe(1);
     }
+
+    expect(persistExamUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        examId: "exam-1",
+        stage: "extraction",
+        inputTokens: 1200,
+        outputTokens: 300,
+        modelId: "gpt-5.4",
+        estimatedCostUsd: expect.any(Number),
+      }),
+    );
   });
 
   it("marks the workflow as error when no valid questions survive normalization", async () => {
@@ -99,5 +114,41 @@ describe("extract exam workflow", () => {
       }),
     );
     expect(registerEvent).toHaveBeenCalledTimes(2);
+  });
+
+  it("calls persistExamUsage even on the error path (no valid questions)", async () => {
+    const persistExamUsage = vi.fn().mockResolvedValue(undefined);
+
+    const workflow = createExtractExamWorkflow({
+      listModels: vi.fn().mockResolvedValue([
+        {
+          id: "model-1",
+          name: "GPT 5.4",
+          provider: "openai",
+          modelId: "gpt-5.4",
+          baseUrl: "https://api.openai.com/v1",
+          apiKey: "secret",
+          enabled: true,
+          isDefault: true,
+        },
+      ]),
+      runExtractionAgent: vi.fn().mockResolvedValue({
+        questions: [],
+        usage: { inputTokens: 500, outputTokens: 100 },
+      }),
+      persistExtraction: vi.fn().mockResolvedValue({ warnings: [], questionsCount: 0 }),
+      persistExamUsage,
+      registerEvent: vi.fn(),
+    });
+
+    await runExtractExamWorkflow(workflow, {
+      examId: "exam-err",
+      initiatedBy: "teacher-1",
+      pdfPath: "teacher-1/exam-err.pdf",
+    });
+
+    expect(persistExamUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ examId: "exam-err", stage: "extraction" }),
+    );
   });
 });
