@@ -10,6 +10,7 @@ import { createPersistAdaptationsTool } from "@/mastra/tools/persist-adaptations
 import { createRegisterRuntimeEventTool } from "@/mastra/tools/register-runtime-event-tool";
 import type { AdaptedAlternative } from "@/domains/adaptations/contracts";
 import type { AiModelRecord } from "@/mastra/providers/model-registry";
+import { calculateSimpleCost } from "@/gateways/managed-agents/usage";
 
 const analyzeAndAdaptInputSchema = z.object({
   examId: z.string(),
@@ -86,18 +87,26 @@ type AnalyzeAndAdaptDependencies = {
   runBnccAnalysis(input: {
     prompt: string;
     model: AiModelRecord;
-  }): Promise<AnalysisResult>;
+  }): Promise<AnalysisResult & { usage: { inputTokens: number; outputTokens: number } }>;
   runBloomAnalysis(input: {
     prompt: string;
     model: AiModelRecord;
-  }): Promise<BloomResult>;
+  }): Promise<BloomResult & { usage: { inputTokens: number; outputTokens: number } }>;
   runAdaptation(input: {
     prompt: string;
     instructions: string;
     model: AiModelRecord;
     alternatives: Array<{ label: string; text: string }> | null;
     correctAnswer: string | null;
-  }): Promise<AdaptationAgentResult>;
+  }): Promise<AdaptationAgentResult & { usage: { inputTokens: number; outputTokens: number } }>;
+  persistExamUsage?(input: {
+    examId: string;
+    stage: "extraction" | "adaptation";
+    modelId: string;
+    inputTokens: number;
+    outputTokens: number;
+    estimatedCostUsd: number;
+  }): Promise<void>;
   registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
 
@@ -285,6 +294,8 @@ export function createAnalyzeAndAdaptWorkflow(
     execute: async ({ inputData }) => {
       let processedQuestions = 0;
       let processedAdaptations = 0;
+      let totalInputTokens = 0;
+      let totalOutputTokens = 0;
 
       try {
         for (const question of inputData.context.questions) {
@@ -300,6 +311,9 @@ export function createAnalyzeAndAdaptWorkflow(
             }),
             model: sharedModelRecord,
           });
+          totalInputTokens += bncc.usage.inputTokens;
+          totalOutputTokens += bncc.usage.outputTokens;
+
           const bloom = await dependencies.runBloomAnalysis({
             prompt: buildBloomPrompt({
               questionContent: question.content,
@@ -307,6 +321,8 @@ export function createAnalyzeAndAdaptWorkflow(
             }),
             model: sharedModelRecord,
           });
+          totalInputTokens += bloom.usage.inputTokens;
+          totalOutputTokens += bloom.usage.outputTokens;
 
           for (const support of inputData.context.supports) {
             await persistAdaptationsTool.execute?.(
@@ -336,6 +352,8 @@ export function createAnalyzeAndAdaptWorkflow(
                 alternatives: question.alternatives,
                 correctAnswer: question.correctAnswer,
               });
+              totalInputTokens += adaptation.usage.inputTokens;
+              totalOutputTokens += adaptation.usage.outputTokens;
 
               await persistAdaptationsTool.execute?.(
                 {
@@ -396,6 +414,19 @@ export function createAnalyzeAndAdaptWorkflow(
           {},
         );
 
+        const sharedModelId = inputData.context.supports[0]?.model.modelId ?? "claude-sonnet-4-6";
+        await dependencies.persistExamUsage?.({
+          examId: inputData.context.exam.id,
+          stage: "adaptation",
+          modelId: sharedModelId,
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+          estimatedCostUsd: calculateSimpleCost(
+            { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
+            sharedModelId,
+          ),
+        });
+
         return {
           outcome: "success" as const,
           metadata: inputData.metadata,
@@ -422,6 +453,19 @@ export function createAnalyzeAndAdaptWorkflow(
           },
           {},
         );
+
+        const sharedModelId = inputData.context.supports[0]?.model.modelId ?? "claude-sonnet-4-6";
+        await dependencies.persistExamUsage?.({
+          examId: inputData.context.exam.id,
+          stage: "adaptation",
+          modelId: sharedModelId,
+          inputTokens: totalInputTokens,
+          outputTokens: totalOutputTokens,
+          estimatedCostUsd: calculateSimpleCost(
+            { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
+            sharedModelId,
+          ),
+        });
 
         return {
           outcome: "error" as const,

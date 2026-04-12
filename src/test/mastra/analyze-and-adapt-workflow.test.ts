@@ -47,6 +47,7 @@ describe("analyze and adapt workflow", () => {
   it("processes questions and supports and completes the exam", async () => {
     const updateExamStatus = vi.fn().mockResolvedValue(undefined);
     const persistAdaptation = vi.fn().mockResolvedValue(undefined);
+    const persistExamUsage = vi.fn().mockResolvedValue(undefined);
 
     const workflow = createAnalyzeAndAdaptWorkflow({
       loadExamContext: vi.fn().mockResolvedValue(examContext),
@@ -56,10 +57,12 @@ describe("analyze and adapt workflow", () => {
       runBnccAnalysis: vi.fn().mockResolvedValue({
         skills: ["EF07MA01"],
         analysis: "A questão trabalha soma de frações.",
+        usage: { inputTokens: 600, outputTokens: 150 },
       }),
       runBloomAnalysis: vi.fn().mockResolvedValue({
         level: "Aplicar",
         analysis: "O aluno aplica o conceito de frações.",
+        usage: { inputTokens: 400, outputTokens: 100 },
       }),
       runAdaptation: vi.fn().mockResolvedValue({
         adaptedContent: "Quanto é metade mais um quarto?",
@@ -81,7 +84,9 @@ describe("analyze and adapt workflow", () => {
             position: 1,
           },
         ],
+        usage: { inputTokens: 800, outputTokens: 200 },
       }),
+      persistExamUsage,
       registerEvent: vi.fn(),
     });
 
@@ -108,6 +113,39 @@ describe("analyze and adapt workflow", () => {
         agentVersion: 3,
         promptVersion: "adaptation@v2/agent-v3",
       }),
+    );
+    expect(persistExamUsage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        examId: "exam-1",
+        stage: "adaptation",
+        // 600+400+800 = 1800 input, 150+100+200 = 450 output
+        inputTokens: 1800,
+        outputTokens: 450,
+        estimatedCostUsd: expect.any(Number),
+      }),
+    );
+  });
+
+  it("calls persistExamUsage even when adaptation fails", async () => {
+    const persistExamUsage = vi.fn().mockResolvedValue(undefined);
+    const failContext = { ...examContext, exam: { ...examContext.exam, id: "exam-fail" } };
+
+    const workflow = createAnalyzeAndAdaptWorkflow({
+      loadExamContext: vi.fn().mockResolvedValue(failContext),
+      createPendingAdaptations: vi.fn().mockResolvedValue(undefined),
+      persistAdaptation: vi.fn().mockResolvedValue(undefined),
+      updateExamStatus: vi.fn().mockResolvedValue(undefined),
+      runBnccAnalysis: vi.fn().mockRejectedValue(new Error("BNCC falhou")),
+      runBloomAnalysis: vi.fn().mockResolvedValue({ level: "Lembrar", analysis: ".", usage: { inputTokens: 0, outputTokens: 0 } }),
+      runAdaptation: vi.fn().mockResolvedValue({ adaptedContent: ".", adaptedAlternatives: null, usage: { inputTokens: 0, outputTokens: 0 } }),
+      persistExamUsage,
+      registerEvent: vi.fn(),
+    });
+
+    await runAnalyzeAndAdaptWorkflow(workflow, { examId: "exam-fail" });
+
+    expect(persistExamUsage).toHaveBeenCalledWith(
+      expect.objectContaining({ examId: "exam-fail", stage: "adaptation" }),
     );
   });
 });
