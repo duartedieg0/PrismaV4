@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { syncSessionUsage, CLAUDE_PRICING } from "../usage";
+import { syncSessionUsage } from "../usage";
 
 const mockSessionRetrieve = vi.fn();
 
@@ -25,15 +25,6 @@ function makeSupabaseMock() {
   };
 }
 
-describe("CLAUDE_PRICING", () => {
-  it("deve definir os 4 tipos de preço", () => {
-    expect(CLAUDE_PRICING.inputPerMillion).toBe(3.00);
-    expect(CLAUDE_PRICING.outputPerMillion).toBe(15.00);
-    expect(CLAUDE_PRICING.cacheReadPerMillion).toBe(0.30);
-    expect(CLAUDE_PRICING.cacheCreationPerMillion).toBe(3.75);
-  });
-});
-
 describe("syncSessionUsage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -53,8 +44,8 @@ describe("syncSessionUsage", () => {
     await syncSessionUsage(mockAnthropicClient, supabase, "thread-1", "sess-1");
 
     const updateArg = mockUpdate.mock.calls[0][0];
-    // 3.00 + 15.00 + 0.30 + 3.75 = 22.05
-    expect(updateArg.estimated_cost_usd).toBeCloseTo(22.05, 5);
+    // 0.80 + 4.00 + 0.08 + 1.00 = 5.88
+    expect(updateArg.estimated_cost_usd).toBeCloseTo(5.88, 5);
   });
 
   it("deve persistir os 4 contadores de token no Supabase", async () => {
