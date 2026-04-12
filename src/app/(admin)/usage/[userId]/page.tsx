@@ -3,12 +3,12 @@ import { requireAdminPageAccess } from "@/features/admin/shared/admin-guard";
 import { createClient } from "@/gateways/supabase/server";
 import { AdminShell } from "@/app-shell/admin/admin-shell";
 import { UsageThreadsTable } from "@/features/admin/usage/components/usage-threads-table";
-import type { AdminUsageThread } from "@/features/admin/usage/contracts";
+import type { AdminUsageThread, AdminUsageExam } from "@/features/admin/usage/contracts";
 
 async function loadUserUsage(userId: string) {
   const supabase = await createClient();
 
-  const [profileResult, threadsResult] = await Promise.all([
+  const [profileResult, threadsResult, examUsageResult] = await Promise.all([
     supabase.from("profiles").select("full_name, email").eq("id", userId).single(),
     supabase
       .from("consultant_threads")
@@ -18,6 +18,10 @@ async function loadUserUsage(userId: string) {
       .eq("teacher_id", userId)
       .not("managed_session_id", "is", null)
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("exam_usage")
+      .select("exam_id, stage, estimated_cost_usd, created_at, exams!inner(topic, status, user_id)")
+      .eq("exams.user_id", userId),
   ]);
 
   const profile = profileResult.data as { full_name: string | null; email: string | null } | null;
@@ -34,7 +38,33 @@ async function loadUserUsage(userId: string) {
     updatedAt: t.updated_at as string,
   }));
 
-  return { profile, threads };
+  const examMap = new Map<string, AdminUsageExam>();
+  for (const eu of (examUsageResult.data ?? [])) {
+    const exam = eu.exams as unknown as { topic: string | null; status: string; user_id: string } | null;
+    if (!exam || exam.user_id !== userId) continue;
+
+    if (!examMap.has(eu.exam_id)) {
+      examMap.set(eu.exam_id, {
+        examId: eu.exam_id,
+        topic: exam.topic,
+        status: exam.status,
+        extractionCostUSD: 0,
+        adaptationCostUSD: 0,
+        totalCostUSD: 0,
+        createdAt: eu.created_at as string,
+      });
+    }
+
+    const e = examMap.get(eu.exam_id)!;
+    const cost = (eu.estimated_cost_usd as number) ?? 0;
+    if (eu.stage === "extraction") e.extractionCostUSD += cost;
+    if (eu.stage === "adaptation") e.adaptationCostUSD += cost;
+    e.totalCostUSD += cost;
+  }
+
+  const exams = [...examMap.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  return { profile, threads, exams };
 }
 
 type PageProps = { params: Promise<{ userId: string }> };
@@ -44,7 +74,7 @@ export default async function AdminUsageUserPage({ params }: PageProps) {
   if (access.kind === "redirect") redirect(access.redirectTo);
 
   const { userId } = await params;
-  const { profile, threads } = await loadUserUsage(userId);
+  const { profile, threads, exams } = await loadUserUsage(userId);
 
   const name = profile?.full_name ?? "Professor";
   const email = profile?.email ?? "";
@@ -61,7 +91,15 @@ export default async function AdminUsageUserPage({ params }: PageProps) {
         { label: name, href: `/usage/${userId}` },
       ]}
     >
-      <UsageThreadsTable threads={threads} />
+      <div className="flex flex-col gap-6">
+        <UsageThreadsTable threads={threads} />
+        {/* TODO(Task 11): Add UsageExamsTable here — exams: {exams.length} */}
+        {exams.length > 0 && (
+          <p className="text-sm text-text-secondary">
+            {exams.length} prova(s) com uso registrado. (Tabela de provas será adicionada na Task 11.)
+          </p>
+        )}
+      </div>
     </AdminShell>
   );
 }

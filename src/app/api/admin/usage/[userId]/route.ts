@@ -1,6 +1,6 @@
 import { withAdminRoute } from "@/app/api/admin/with-admin-route";
 import { apiSuccess, apiInternalError, apiNotFound } from "@/services/errors/api-response";
-import type { AdminUsageThread } from "@/features/admin/usage/contracts";
+import type { AdminUsageThread, AdminUsageExam } from "@/features/admin/usage/contracts";
 
 export const GET = withAdminRoute(async ({ supabase }, request) => {
   const url = new URL(request.url);
@@ -9,7 +9,7 @@ export const GET = withAdminRoute(async ({ supabase }, request) => {
 
   if (!userId) return apiNotFound("Usuário não encontrado.");
 
-  const [profileResult, threadsResult] = await Promise.all([
+  const [profileResult, threadsResult, examUsageResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("full_name, email")
@@ -23,6 +23,10 @@ export const GET = withAdminRoute(async ({ supabase }, request) => {
       .eq("teacher_id", userId)
       .not("managed_session_id", "is", null)
       .order("updated_at", { ascending: false }),
+    supabase
+      .from("exam_usage")
+      .select("exam_id, stage, estimated_cost_usd, created_at, exams!inner(topic, status, user_id)")
+      .eq("exams.user_id", userId),
   ]);
 
   if (profileResult.error) return apiInternalError(profileResult.error.message);
@@ -42,8 +46,35 @@ export const GET = withAdminRoute(async ({ supabase }, request) => {
     updatedAt: t.updated_at as string,
   }));
 
+  const examMap = new Map<string, AdminUsageExam>();
+  for (const eu of (examUsageResult.data ?? [])) {
+    const exam = eu.exams as unknown as { topic: string | null; status: string; user_id: string } | null;
+    if (!exam || exam.user_id !== userId) continue;
+
+    if (!examMap.has(eu.exam_id)) {
+      examMap.set(eu.exam_id, {
+        examId: eu.exam_id,
+        topic: exam.topic,
+        status: exam.status,
+        extractionCostUSD: 0,
+        adaptationCostUSD: 0,
+        totalCostUSD: 0,
+        createdAt: eu.created_at as string,
+      });
+    }
+
+    const e = examMap.get(eu.exam_id)!;
+    const cost = (eu.estimated_cost_usd as number) ?? 0;
+    if (eu.stage === "extraction") e.extractionCostUSD += cost;
+    if (eu.stage === "adaptation") e.adaptationCostUSD += cost;
+    e.totalCostUSD += cost;
+  }
+
+  const exams = [...examMap.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
   return apiSuccess({
     user: { name: profile.full_name, email: profile.email },
     threads,
+    exams,
   });
 });
