@@ -28,7 +28,7 @@ describe("extraction agent runner", () => {
           },
         ],
       },
-      usage: { promptTokens: 0, completionTokens: 0 },
+      usage: { inputTokens: 0, outputTokens: 0 },
     });
 
     const pdfData = new Uint8Array([1, 2, 3]);
@@ -92,7 +92,7 @@ describe("extraction agent runner", () => {
           },
         ],
       },
-      usage: { promptTokens: 800, completionTokens: 200 },
+      usage: { inputTokens: 800, outputTokens: 200 },
     });
 
     const result = await runPdfExtractionAgent({
