@@ -9,6 +9,10 @@ export type AdminModelRecord = {
   is_default: boolean;
   system_role: string | null;
   created_at: string;
+  input_price_per_million: number | null;
+  output_price_per_million: number | null;
+  cache_read_price_per_million: number | null;
+  cache_creation_price_per_million: number | null;
 };
 
 export type AdminModelView = {
@@ -22,4 +26,8 @@ export type AdminModelView = {
   isDefault: boolean;
   systemRole: string | null;
   createdAt: string;
+  inputPricePerMillion: number | null;
+  outputPricePerMillion: number | null;
+  cacheReadPricePerMillion: number | null;
+  cacheCreationPricePerMillion: number | null;
 };
