@@ -5,6 +5,9 @@ import { updateModelSchema } from "@/features/admin/models/validation";
 import { createClient } from "@/gateways/supabase/server";
 import { apiInternalError, apiSuccess, apiValidationError } from "@/services/errors/api-response";
 
+const MODEL_SELECT =
+  "id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at, input_price_per_million, output_price_per_million, cache_read_price_per_million, cache_creation_price_per_million";
+
 type RouteContext = {
   params: Promise<{ id: string }>;
 };
@@ -33,7 +36,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
     .from("ai_models")
     .update(buildModelPatch(parsed.data))
     .eq("id", id)
-    .select("id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at")
+    .select(MODEL_SELECT)
     .single();
 
   if (error) {
