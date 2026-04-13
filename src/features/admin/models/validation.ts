@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+// .optional().nullable(): aceita undefined (campo omitido) e null (limpar valor)
+const pricingField = z.number().positive().optional().nullable();
+
 export const createModelSchema = z.object({
   name: z.string().min(1, "O nome do modelo é obrigatório.").max(100),
   provider: z.string().min(1, "O provider é obrigatório.").max(50).default("openai"),
@@ -9,6 +12,10 @@ export const createModelSchema = z.object({
   enabled: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   systemRole: z.string().max(50).nullable().optional(),
+  inputPricePerMillion: pricingField,
+  outputPricePerMillion: pricingField,
+  cacheReadPricePerMillion: pricingField,
+  cacheCreationPricePerMillion: pricingField,
 });
 
 export const updateModelSchema = z.object({
@@ -20,6 +27,10 @@ export const updateModelSchema = z.object({
   enabled: z.boolean().optional(),
   isDefault: z.boolean().optional(),
   systemRole: z.string().max(50).nullable().optional(),
+  inputPricePerMillion: pricingField,
+  outputPricePerMillion: pricingField,
+  cacheReadPricePerMillion: pricingField,
+  cacheCreationPricePerMillion: pricingField,
 });
 
 export type CreateModelInput = z.infer<typeof createModelSchema>;
