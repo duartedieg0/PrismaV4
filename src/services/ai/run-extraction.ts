@@ -8,13 +8,22 @@ import {
   runExtractExamWorkflow,
 } from "@/mastra/workflows/extract-exam-workflow";
 import { persistExamUsage as persistExamUsageGateway } from "@/gateways/exam-usage/persist";
+import { getPricingForModel, calculateSimpleCost } from "@/gateways/managed-agents/usage";
 import { createPrismaMastraRuntime } from "@/mastra/runtime";
 
-// Deps without persistExamUsage — service injects it internally
 type RunExtractionDeps = Omit<
   Parameters<typeof createExtractExamWorkflow>[0],
   "persistExamUsage"
 >;
+
+// Tipo do input que o workflow passa para persistExamUsage (sem estimatedCostUsd)
+type WorkflowUsageInput = {
+  examId: string;
+  stage: "extraction" | "adaptation";
+  modelId: string;
+  inputTokens: number;
+  outputTokens: number;
+};
 
 export async function runExtraction(
   input: ExtractionWorkflowInput,
@@ -22,9 +31,11 @@ export async function runExtraction(
   supabase?: SupabaseClient,
 ): Promise<ExtractionWorkflowResult> {
   const persistFn = supabase
-    ? async (usageInput: Parameters<typeof persistExamUsageGateway>[1]) => {
+    ? async (usageInput: WorkflowUsageInput) => {
         try {
-          await persistExamUsageGateway(supabase, usageInput);
+          const pricing = await getPricingForModel(supabase, usageInput.modelId);
+          const estimatedCostUsd = calculateSimpleCost(usageInput, pricing);
+          await persistExamUsageGateway(supabase, { ...usageInput, estimatedCostUsd });
         } catch (err) {
           console.error("[exam-usage] Failed to persist extraction usage:", err);
         }
@@ -39,10 +50,7 @@ export async function runExtraction(
     extractExamWorkflow: workflow,
   });
   const registeredWorkflow = mastra.getWorkflowById(workflow.id) as typeof workflow;
-  const result = await runExtractExamWorkflow(
-    registeredWorkflow,
-    input,
-  );
+  const result = await runExtractExamWorkflow(registeredWorkflow, input);
 
   if (result.status !== "success") {
     throw new Error("Falha ao executar o workflow de extração.");

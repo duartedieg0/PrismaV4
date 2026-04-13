@@ -8,7 +8,17 @@ import {
   runAnalyzeAndAdaptWorkflow,
 } from "@/mastra/workflows/analyze-and-adapt-workflow";
 import { persistExamUsage as persistExamUsageGateway } from "@/gateways/exam-usage/persist";
+import { getPricingForModel, calculateSimpleCost } from "@/gateways/managed-agents/usage";
 import { createPrismaMastraRuntime } from "@/mastra/runtime";
+
+// Tipo do input que o workflow passa para persistExamUsage (sem estimatedCostUsd)
+type WorkflowUsageInput = {
+  examId: string;
+  stage: "extraction" | "adaptation";
+  modelId: string;
+  inputTokens: number;
+  outputTokens: number;
+};
 
 // Deps without persistExamUsage — service injects it internally
 type RunAnalysisAndAdaptationDeps = Omit<
@@ -26,9 +36,11 @@ export async function runAnalysisAndAdaptation(
   supabase?: SupabaseClient,
 ): Promise<AdaptationWorkflowSuccess | AdaptationWorkflowFailure> {
   const persistFn = supabase
-    ? async (usageInput: Parameters<typeof persistExamUsageGateway>[1]) => {
+    ? async (usageInput: WorkflowUsageInput) => {
         try {
-          await persistExamUsageGateway(supabase, usageInput);
+          const pricing = await getPricingForModel(supabase, usageInput.modelId);
+          const estimatedCostUsd = calculateSimpleCost(usageInput, pricing);
+          await persistExamUsageGateway(supabase, { ...usageInput, estimatedCostUsd });
         } catch (err) {
           console.error("[exam-usage] Failed to persist adaptation usage:", err);
         }
