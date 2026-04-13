@@ -14,6 +14,10 @@ export function toAdminModelView(model: AdminModelRecord): AdminModelView {
     isDefault: model.is_default,
     systemRole: model.system_role,
     createdAt: model.created_at,
+    inputPricePerMillion: model.input_price_per_million,
+    outputPricePerMillion: model.output_price_per_million,
+    cacheReadPricePerMillion: model.cache_read_price_per_million,
+    cacheCreationPricePerMillion: model.cache_creation_price_per_million,
   };
 }
 
@@ -28,6 +32,10 @@ export function buildModelPatch(input: UpdateModelInput) {
   if (input.enabled !== undefined) patch.enabled = input.enabled;
   if (input.isDefault !== undefined) patch.is_default = input.isDefault;
   if (input.systemRole !== undefined) patch.system_role = input.systemRole;
+  if (input.inputPricePerMillion !== undefined) patch.input_price_per_million = input.inputPricePerMillion;
+  if (input.outputPricePerMillion !== undefined) patch.output_price_per_million = input.outputPricePerMillion;
+  if (input.cacheReadPricePerMillion !== undefined) patch.cache_read_price_per_million = input.cacheReadPricePerMillion;
+  if (input.cacheCreationPricePerMillion !== undefined) patch.cache_creation_price_per_million = input.cacheCreationPricePerMillion;
 
   return patch;
 }
