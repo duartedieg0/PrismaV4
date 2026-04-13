@@ -22,6 +22,10 @@ export default function AdminModelsPage() {
     systemRole: "",
     enabled: true,
     isDefault: false,
+    inputPricePerMillion: "",
+    outputPricePerMillion: "",
+    cacheReadPricePerMillion: "",
+    cacheCreationPricePerMillion: "",
   });
 
   async function loadModels() {
@@ -58,6 +62,10 @@ export default function AdminModelsPage() {
       systemRole: "",
       enabled: true,
       isDefault: false,
+      inputPricePerMillion: "",
+      outputPricePerMillion: "",
+      cacheReadPricePerMillion: "",
+      cacheCreationPricePerMillion: "",
     });
   }
 
@@ -79,6 +87,10 @@ export default function AdminModelsPage() {
             systemRole: form.systemRole.trim() ? form.systemRole : null,
             enabled: form.enabled,
             isDefault: form.isDefault,
+            inputPricePerMillion: form.inputPricePerMillion ? parseFloat(form.inputPricePerMillion) : null,
+            outputPricePerMillion: form.outputPricePerMillion ? parseFloat(form.outputPricePerMillion) : null,
+            cacheReadPricePerMillion: form.cacheReadPricePerMillion ? parseFloat(form.cacheReadPricePerMillion) : null,
+            cacheCreationPricePerMillion: form.cacheCreationPricePerMillion ? parseFloat(form.cacheCreationPricePerMillion) : null,
           }),
         },
       );
@@ -175,6 +187,53 @@ export default function AdminModelsPage() {
                 value={form.systemRole}
               />
             </div>
+            <div>
+              <p className="mb-2 text-xs font-medium text-text-secondary">
+                Precificação (USD por 1M tokens) — opcional
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <input
+                  aria-label="Preço por 1M tokens de entrada (USD)"
+                  className="rounded-xl border border-border-default px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  min="0"
+                  onChange={(event) => setForm((current) => ({ ...current, inputPricePerMillion: event.target.value }))}
+                  placeholder="Entrada (ex: 0.80)"
+                  step="any"
+                  type="number"
+                  value={form.inputPricePerMillion}
+                />
+                <input
+                  aria-label="Preço por 1M tokens de saída (USD)"
+                  className="rounded-xl border border-border-default px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  min="0"
+                  onChange={(event) => setForm((current) => ({ ...current, outputPricePerMillion: event.target.value }))}
+                  placeholder="Saída (ex: 4.00)"
+                  step="any"
+                  type="number"
+                  value={form.outputPricePerMillion}
+                />
+                <input
+                  aria-label="Preço por 1M tokens de cache lido (USD)"
+                  className="rounded-xl border border-border-default px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  min="0"
+                  onChange={(event) => setForm((current) => ({ ...current, cacheReadPricePerMillion: event.target.value }))}
+                  placeholder="Cache lido (ex: 0.08)"
+                  step="any"
+                  type="number"
+                  value={form.cacheReadPricePerMillion}
+                />
+                <input
+                  aria-label="Preço por 1M tokens de cache criado (USD)"
+                  className="rounded-xl border border-border-default px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+                  min="0"
+                  onChange={(event) => setForm((current) => ({ ...current, cacheCreationPricePerMillion: event.target.value }))}
+                  placeholder="Cache criado (ex: 1.00)"
+                  step="any"
+                  type="number"
+                  value={form.cacheCreationPricePerMillion}
+                />
+              </div>
+            </div>
             <div className="flex items-center gap-6">
               <label className="flex items-center gap-2 text-sm text-text-secondary">
                 <input
@@ -239,6 +298,10 @@ export default function AdminModelsPage() {
                           systemRole: model.systemRole ?? "",
                           enabled: model.enabled,
                           isDefault: model.isDefault,
+                          inputPricePerMillion: model.inputPricePerMillion?.toString() ?? "",
+                          outputPricePerMillion: model.outputPricePerMillion?.toString() ?? "",
+                          cacheReadPricePerMillion: model.cacheReadPricePerMillion?.toString() ?? "",
+                          cacheCreationPricePerMillion: model.cacheCreationPricePerMillion?.toString() ?? "",
                         });
                       }}
                       type="button"
@@ -256,6 +319,9 @@ export default function AdminModelsPage() {
                   <StatusBadge label={model.enabled ? "Habilitado" : "Desabilitado"} tone={model.enabled ? "default" : "secondary"} />
                   {model.isDefault ? <StatusBadge label="Padrao" tone="outline" /> : null}
                   {model.systemRole ? <StatusBadge label={model.systemRole} tone="outline" /> : null}
+                  {model.enabled && (model.inputPricePerMillion == null || model.outputPricePerMillion == null) ? (
+                    <StatusBadge label="Sem preço" tone="secondary" />
+                  ) : null}
                 </div>
               </div>
             ))}
