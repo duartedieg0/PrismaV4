@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireAdminPageAccess } from "@/features/admin/shared/admin-guard";
 import { createClient } from "@/gateways/supabase/server";
+import { createServiceRoleClient } from "@/gateways/supabase/service-role";
 import { AdminShell } from "@/app-shell/admin/admin-shell";
 import { UsageThreadsTable } from "@/features/admin/usage/components/usage-threads-table";
 import { UsageExamsTable } from "@/features/admin/usage/components/usage-exams-table";
@@ -10,10 +11,11 @@ import type { AdminUsageThread, AdminUsageExam } from "@/features/admin/usage/co
 
 async function loadUserUsage(userId: string) {
   const supabase = await createClient();
+  const serviceSupabase = createServiceRoleClient() ?? supabase;
 
   const [profileResult, threadsResult, examUsageResult] = await Promise.all([
-    supabase.from("profiles").select("full_name, email").eq("id", userId).single(),
-    supabase
+    serviceSupabase.from("profiles").select("full_name, email").eq("id", userId).single(),
+    serviceSupabase
       .from("consultant_threads")
       .select(
         "id, title, total_input_tokens, total_output_tokens, total_cache_read_tokens, total_cache_creation_tokens, estimated_cost_usd, updated_at",
@@ -21,7 +23,7 @@ async function loadUserUsage(userId: string) {
       .eq("teacher_id", userId)
       .not("managed_session_id", "is", null)
       .order("updated_at", { ascending: false }),
-    supabase
+    serviceSupabase
       .from("exam_usage")
       .select("exam_id, stage, estimated_cost_usd, created_at, exams!inner(topic, status, user_id)")
       .eq("exams.user_id", userId),

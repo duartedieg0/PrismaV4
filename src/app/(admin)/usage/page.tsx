@@ -13,7 +13,7 @@ async function loadUsageSummary(): Promise<AdminUsageSummary> {
   const serviceSupabase = createServiceRoleClient() ?? supabase;
 
   const [threadsResult, examUsageResult] = await Promise.all([
-    supabase
+    serviceSupabase
       .from("consultant_threads")
       .select("teacher_id, estimated_cost_usd, updated_at, profiles(full_name, email)")
       .not("managed_session_id", "is", null),
