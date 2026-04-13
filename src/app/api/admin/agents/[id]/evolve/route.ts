@@ -96,7 +96,7 @@ export async function POST(request: Request, { params }: RouteContext) {
 
   const { data: models, error: modelError } = await supabase
     .from("ai_models")
-    .select("id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at");
+    .select("id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at, input_price_per_million, output_price_per_million, cache_read_price_per_million, cache_creation_price_per_million");
 
   if (modelError) {
     return apiInternalError(modelError.message);

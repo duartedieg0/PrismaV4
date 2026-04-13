@@ -18,6 +18,10 @@ describe("admin models integration helpers", () => {
       is_default: true,
       system_role: "evolution",
       created_at: "2026-03-21T00:00:00.000Z",
+      input_price_per_million: null,
+      output_price_per_million: null,
+      cache_read_price_per_million: null,
+      cache_creation_price_per_million: null,
     });
 
     expect(view.apiKeyMasked).toBe("sec...3456");
@@ -38,6 +42,10 @@ describe("admin models integration helpers", () => {
         is_default: true,
         system_role: null,
         created_at: "2026-03-21T00:00:00.000Z",
+        input_price_per_million: null,
+        output_price_per_million: null,
+        cache_read_price_per_million: null,
+        cache_creation_price_per_million: null,
       },
       {
         id: "model-2",
@@ -50,6 +58,10 @@ describe("admin models integration helpers", () => {
         is_default: false,
         system_role: "evolution",
         created_at: "2026-03-21T00:00:00.000Z",
+        input_price_per_million: null,
+        output_price_per_million: null,
+        cache_read_price_per_million: null,
+        cache_creation_price_per_million: null,
       },
     ]);
 

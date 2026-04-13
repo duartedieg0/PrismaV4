@@ -32,6 +32,10 @@ describe("agent evolution integration", () => {
         is_default: true,
         system_role: "evolution",
         created_at: "2026-03-21T00:00:00.000Z",
+        input_price_per_million: null,
+        output_price_per_million: null,
+        cache_read_price_per_million: null,
+        cache_creation_price_per_million: null,
       },
       feedbacks: [{
         id: "feedback-1",
