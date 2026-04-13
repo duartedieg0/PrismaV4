@@ -15,7 +15,7 @@ async function loadUsageSummary(): Promise<AdminUsageSummary> {
   const [threadsResult, examUsageResult] = await Promise.all([
     serviceSupabase
       .from("consultant_threads")
-      .select("teacher_id, estimated_cost_usd, updated_at, profiles(full_name, email)")
+      .select("teacher_id, estimated_cost_usd, updated_at")
       .not("managed_session_id", "is", null),
     serviceSupabase
       .from("exam_usage")
@@ -26,12 +26,10 @@ async function loadUsageSummary(): Promise<AdminUsageSummary> {
   const examUsages = examUsageResult.data ?? [];
 
   const userMap = new Map<string, AdminUsageUser>();
-  // examsByUser: userId → Set<examId> to count unique exams per user
   const examsByUser = new Map<string, Set<string>>();
 
   // Aggregate threads
   for (const thread of threads) {
-    const profile = thread.profiles as unknown as { full_name: string | null; email: string | null } | null;
     const cost = (thread.estimated_cost_usd as number) ?? 0;
     const updatedAt = thread.updated_at as string;
     const userId = thread.teacher_id;
@@ -39,8 +37,8 @@ async function loadUsageSummary(): Promise<AdminUsageSummary> {
     if (!userMap.has(userId)) {
       userMap.set(userId, {
         userId,
-        name: profile?.full_name ?? null,
-        email: profile?.email ?? null,
+        name: null,
+        email: null,
         threadCount: 0,
         examCount: 0,
         costByCategory: { consultant: 0, extraction: 0, adaptation: 0 },
@@ -98,9 +96,25 @@ async function loadUsageSummary(): Promise<AdminUsageSummary> {
     if (user) user.examCount = examIds.size;
   }
 
+  // Load profiles separately to avoid FK join issues
+  const allUserIds = [...userMap.keys()];
+  if (allUserIds.length > 0) {
+    const { data: profiles } = await serviceSupabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .in("id", allUserIds);
+
+    for (const profile of profiles ?? []) {
+      const user = userMap.get(profile.id);
+      if (user) {
+        user.name = profile.full_name as string | null;
+        user.email = profile.email as string | null;
+      }
+    }
+  }
+
   const users = [...userMap.values()].sort((a, b) => b.estimatedCostUSD - a.estimatedCostUSD);
 
-  // Count unique exams in total
   const uniqueExamIds = new Set(examUsages.map((eu) => eu.exam_id as string));
 
   return {
