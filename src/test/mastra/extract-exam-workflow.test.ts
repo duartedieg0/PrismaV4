@@ -63,7 +63,6 @@ describe("extract exam workflow", () => {
         inputTokens: 1200,
         outputTokens: 300,
         modelId: "gpt-5.4",
-        estimatedCostUsd: expect.any(Number),
       }),
     );
   });

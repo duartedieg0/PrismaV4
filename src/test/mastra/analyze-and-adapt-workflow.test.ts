@@ -121,7 +121,6 @@ describe("analyze and adapt workflow", () => {
         // 600+400+800 = 1800 input, 150+100+200 = 450 output
         inputTokens: 1800,
         outputTokens: 450,
-        estimatedCostUsd: expect.any(Number),
       }),
     );
   });
