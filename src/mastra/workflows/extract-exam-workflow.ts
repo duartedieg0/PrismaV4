@@ -14,7 +14,6 @@ import type { AiModelRecord } from "@/mastra/providers/model-registry";
 import { resolveExtractionModel, toMastraModelId } from "@/mastra/providers/model-registry";
 import { createPersistExtractionTool } from "@/mastra/tools/persist-extraction-tool";
 import { createRegisterRuntimeEventTool } from "@/mastra/tools/register-runtime-event-tool";
-import { calculateSimpleCost } from "@/gateways/managed-agents/usage";
 
 const extractionWorkflowInputSchema = z.object({
   examId: z.string(),
@@ -117,7 +116,6 @@ type ExtractionWorkflowDependencies = {
     modelId: string;
     inputTokens: number;
     outputTokens: number;
-    estimatedCostUsd: number;
   }): Promise<void>;
   registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
@@ -232,10 +230,6 @@ export function createExtractExamWorkflow(
           modelId: inputData.usage.modelId,
           inputTokens: inputData.usage.inputTokens,
           outputTokens: inputData.usage.outputTokens,
-          estimatedCostUsd: calculateSimpleCost(
-            { inputTokens: inputData.usage.inputTokens, outputTokens: inputData.usage.outputTokens },
-            inputData.usage.modelId,
-          ),
         });
 
         return {
@@ -267,10 +261,6 @@ export function createExtractExamWorkflow(
         modelId: inputData.usage.modelId,
         inputTokens: inputData.usage.inputTokens,
         outputTokens: inputData.usage.outputTokens,
-        estimatedCostUsd: calculateSimpleCost(
-          { inputTokens: inputData.usage.inputTokens, outputTokens: inputData.usage.outputTokens },
-          inputData.usage.modelId,
-        ),
       });
 
       return {

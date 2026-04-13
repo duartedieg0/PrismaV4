@@ -10,7 +10,6 @@ import { createPersistAdaptationsTool } from "@/mastra/tools/persist-adaptations
 import { createRegisterRuntimeEventTool } from "@/mastra/tools/register-runtime-event-tool";
 import type { AdaptedAlternative } from "@/domains/adaptations/contracts";
 import type { AiModelRecord } from "@/mastra/providers/model-registry";
-import { calculateSimpleCost } from "@/gateways/managed-agents/usage";
 
 const analyzeAndAdaptInputSchema = z.object({
   examId: z.string(),
@@ -105,7 +104,6 @@ type AnalyzeAndAdaptDependencies = {
     modelId: string;
     inputTokens: number;
     outputTokens: number;
-    estimatedCostUsd: number;
   }): Promise<void>;
   registerEvent?(event: ReturnType<typeof createExamEventRecord>): Promise<void> | void;
 };
@@ -421,10 +419,6 @@ export function createAnalyzeAndAdaptWorkflow(
           modelId: sharedModelId,
           inputTokens: totalInputTokens,
           outputTokens: totalOutputTokens,
-          estimatedCostUsd: calculateSimpleCost(
-            { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
-            sharedModelId,
-          ),
         });
 
         return {
@@ -461,10 +455,6 @@ export function createAnalyzeAndAdaptWorkflow(
           modelId: sharedModelId,
           inputTokens: totalInputTokens,
           outputTokens: totalOutputTokens,
-          estimatedCostUsd: calculateSimpleCost(
-            { inputTokens: totalInputTokens, outputTokens: totalOutputTokens },
-            sharedModelId,
-          ),
         });
 
         return {
