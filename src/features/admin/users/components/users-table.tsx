@@ -7,6 +7,7 @@ import { DataTableWrapper } from "@/design-system/components/data-table-wrapper"
 import { EmptyState } from "@/design-system/components/empty-state";
 import { LoadingState } from "@/design-system/components/loading-state";
 import { StatusBadge } from "@/design-system/components/status-badge";
+import { Avatar } from "@/design-system/components/avatar";
 import { UserGovernanceDialog } from "@/features/admin/users/components/user-governance-dialog";
 import type { AdminUserListItem } from "@/features/admin/users/contracts";
 
@@ -20,6 +21,14 @@ type PendingAction =
 type UsersTableProps = {
   initialUsers: AdminUserListItem[];
 };
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
 
 export function UsersTable({ initialUsers }: UsersTableProps) {
   const [users, setUsers] = useState(initialUsers);
@@ -129,70 +138,122 @@ export function UsersTable({ initialUsers }: UsersTableProps) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border-default bg-white p-5">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex flex-col gap-1">
-              <strong className="text-sm font-semibold text-text-primary">Usuários da plataforma</strong>
-              <span className="text-sm text-text-secondary">
-                Bloqueio, desbloqueio e mudança de papel com auditoria persistida.
-              </span>
-            </div>
-            <span className="font-mono text-xs text-text-secondary">
-              {sortedUsers.length} registros
+      <div className="rounded-2xl border border-border-default bg-white">
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border-default px-5 py-4">
+          <div className="flex flex-col gap-0.5">
+            <strong className="text-sm font-semibold text-text-primary">Usuários da plataforma</strong>
+            <span className="text-xs text-text-muted">
+              Bloqueio, desbloqueio e mudança de papel com confirmação explícita.
             </span>
           </div>
-          <DataTableWrapper>
-            <table>
-              <thead>
-                <tr>
-                  <th align="left">Nome</th>
-                  <th align="left">E-mail</th>
-                  <th align="left">Papel</th>
-                  <th align="left">Status</th>
-                  <th align="left">Ações</th>
-                </tr>
-              </thead>
-              <tbody>
-                {sortedUsers.map((user) => (
-                  <tr key={user.id}>
-                    <td>{user.fullName ?? "—"}</td>
-                    <td>{user.email ?? "—"}</td>
-                    <td>
-                      <StatusBadge label={user.role === "admin" ? "Admin" : "Professor"} tone={user.role === "admin" ? "outline" : "secondary"} />
-                    </td>
-                    <td>
-                      <StatusBadge
-                        label={user.blocked ? "Bloqueado" : "Ativo"}
-                        tone={user.blocked ? "destructive" : "default"}
-                      />
-                    </td>
-                    <td>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          onClick={() => setPendingAction({ user, type: user.blocked ? "unblock" : "block" })}
-                          type="button"
-                          variant={user.blocked ? "secondary" : "outline"}
-                          size="sm"
-                        >
-                          {user.blocked ? "Desbloquear" : "Bloquear"}
-                        </Button>
-                        <Button
-                          onClick={() => setPendingAction({ user, type: user.role === "admin" ? "demote" : "promote" })}
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                        >
-                          {user.role === "admin" ? "Tornar professor" : "Tornar admin"}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </DataTableWrapper>
+          <span className="rounded-full bg-surface-muted px-2.5 py-1 font-mono text-xs text-text-secondary">
+            {sortedUsers.length} usuários
+          </span>
         </div>
+
+        <DataTableWrapper>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border-default bg-surface-muted/50">
+                <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Usuário
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Papel
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Status
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Membro desde
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-text-muted">
+                  Ações
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-muted">
+              {sortedUsers.map((user) => (
+                <tr
+                  key={user.id}
+                  className={
+                    user.blocked
+                      ? "bg-red-50/40 transition-colors hover:bg-red-50/60"
+                      : "transition-colors hover:bg-surface-muted/40"
+                  }
+                >
+                  {/* Usuário: avatar + nome + email */}
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        name={user.fullName ?? user.email ?? "?"}
+                        src={user.avatarUrl ?? undefined}
+                        size="sm"
+                      />
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-medium text-text-primary">
+                          {user.fullName ?? "—"}
+                        </span>
+                        <span className="text-xs text-text-muted">{user.email ?? ""}</span>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Papel */}
+                  <td className="px-4 py-3.5">
+                    <StatusBadge
+                      label={user.role === "admin" ? "Admin" : "Professor"}
+                      tone={user.role === "admin" ? "outline" : "secondary"}
+                    />
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-4 py-3.5">
+                    <StatusBadge
+                      label={user.blocked ? "Bloqueado" : "Ativo"}
+                      tone={user.blocked ? "destructive" : "default"}
+                    />
+                  </td>
+
+                  {/* Membro desde */}
+                  <td className="px-4 py-3.5 text-xs text-text-muted">
+                    {formatDate(user.createdAt)}
+                  </td>
+
+                  {/* Ações */}
+                  <td className="px-4 py-3.5">
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        onClick={() =>
+                          setPendingAction({ user, type: user.blocked ? "unblock" : "block" })
+                        }
+                        type="button"
+                        variant={user.blocked ? "secondary" : "outline"}
+                        size="sm"
+                      >
+                        {user.blocked ? "Desbloquear" : "Bloquear"}
+                      </Button>
+                      <Button
+                        onClick={() =>
+                          setPendingAction({
+                            user,
+                            type: user.role === "admin" ? "demote" : "promote",
+                          })
+                        }
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                      >
+                        {user.role === "admin" ? "Tornar professor" : "Tornar admin"}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </DataTableWrapper>
       </div>
 
       {dialogConfig ? (
