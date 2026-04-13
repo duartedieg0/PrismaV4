@@ -36,6 +36,9 @@ vi.mock("@/gateways/supabase/server", () => ({
 
       if (table === "questions") {
         return {
+          select: () => ({
+            eq: () => Promise.resolve({ data: [], error: null }),
+          }),
           update: () => ({
             eq() {
               return {
@@ -49,6 +52,10 @@ vi.mock("@/gateways/supabase/server", () => ({
       throw new Error(`Unexpected table: ${table}`);
     },
   })),
+}));
+
+vi.mock("@/gateways/supabase/service-role", () => ({
+  createServiceRoleClient: () => null,
 }));
 
 vi.mock("@/services/ai/run-analysis-and-adaptation", () => ({

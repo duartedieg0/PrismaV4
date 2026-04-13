@@ -7,6 +7,7 @@ import { runExtraction } from "@/services/ai/run-extraction";
 import { logError } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
 import { apiError, apiInternalError, apiSuccess, apiUnauthorized } from "@/services/errors/api-response";
+import { createServiceRoleClient } from "@/gateways/supabase/service-role";
 
 export const maxDuration = 300;
 
@@ -148,6 +149,7 @@ export async function POST(request: Request) {
       const ctx = createRequestContext({ examId: result.examId });
       try {
         const extractionSupabase = await createClient();
+        const usageSupabase = createServiceRoleClient() ?? extractionSupabase;
         const extractionResult = await runExtraction(
           {
             examId: result.examId,
@@ -221,7 +223,7 @@ export async function POST(request: Request) {
             },
             registerEvent: async () => {},
           },
-          extractionSupabase,
+          usageSupabase,
         );
 
         if (extractionResult.outcome === "error") {

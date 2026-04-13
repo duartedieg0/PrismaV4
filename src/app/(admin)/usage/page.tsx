@@ -1,19 +1,23 @@
 import { redirect } from "next/navigation";
 import { requireAdminPageAccess } from "@/features/admin/shared/admin-guard";
 import { createClient } from "@/gateways/supabase/server";
+import { createServiceRoleClient } from "@/gateways/supabase/service-role";
 import { AdminShell } from "@/app-shell/admin/admin-shell";
 import { UsageUsersTable } from "@/features/admin/usage/components/usage-users-table";
+import { StatCard } from "@/design-system/components/stat-card";
+import { MessageSquare, FileText, DollarSign } from "lucide-react";
 import type { AdminUsageSummary, AdminUsageUser } from "@/features/admin/usage/contracts";
 
 async function loadUsageSummary(): Promise<AdminUsageSummary> {
   const supabase = await createClient();
+  const serviceSupabase = createServiceRoleClient() ?? supabase;
 
   const [threadsResult, examUsageResult] = await Promise.all([
     supabase
       .from("consultant_threads")
       .select("teacher_id, estimated_cost_usd, updated_at, profiles(full_name, email)")
       .not("managed_session_id", "is", null),
-    supabase
+    serviceSupabase
       .from("exam_usage")
       .select("exam_id, stage, estimated_cost_usd, created_at, exams!inner(user_id)"),
   ]);
@@ -128,24 +132,21 @@ export default async function AdminUsagePage() {
     >
       <div className="flex flex-col gap-6">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-border-default bg-white p-5">
-            <p className="text-sm text-text-secondary">Total de sessões</p>
-            <p className="mt-1 text-2xl font-semibold text-text-primary">
-              {summary.totals.sessions.toLocaleString("pt-BR")}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border-default bg-white p-5">
-            <p className="text-sm text-text-secondary">Total de provas</p>
-            <p className="mt-1 text-2xl font-semibold text-text-primary">
-              {summary.totals.examCount.toLocaleString("pt-BR")}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border-default bg-white p-5">
-            <p className="text-sm text-text-secondary">Custo estimado total</p>
-            <p className="mt-1 font-mono text-2xl font-semibold text-text-primary">
-              ${summary.totals.estimatedCostUSD.toFixed(4)} USD
-            </p>
-          </div>
+          <StatCard
+            label="Total de sessões"
+            value={summary.totals.sessions.toLocaleString("pt-BR")}
+            icon={<MessageSquare className="h-4 w-4" />}
+          />
+          <StatCard
+            label="Total de provas"
+            value={summary.totals.examCount.toLocaleString("pt-BR")}
+            icon={<FileText className="h-4 w-4" />}
+          />
+          <StatCard
+            label="Custo estimado total"
+            value={`$${summary.totals.estimatedCostUSD.toFixed(4)}`}
+            icon={<DollarSign className="h-4 w-4" />}
+          />
         </div>
 
         <UsageUsersTable users={summary.users} />

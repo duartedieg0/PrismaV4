@@ -4,6 +4,8 @@ import { createClient } from "@/gateways/supabase/server";
 import { AdminShell } from "@/app-shell/admin/admin-shell";
 import { UsageThreadsTable } from "@/features/admin/usage/components/usage-threads-table";
 import { UsageExamsTable } from "@/features/admin/usage/components/usage-exams-table";
+import { StatCard } from "@/design-system/components/stat-card";
+import { MessageSquare, FileText, DollarSign } from "lucide-react";
 import type { AdminUsageThread, AdminUsageExam } from "@/features/admin/usage/contracts";
 
 async function loadUserUsage(userId: string) {
@@ -80,10 +82,14 @@ export default async function AdminUsageUserPage({ params }: PageProps) {
   const name = profile?.full_name ?? "Professor";
   const email = profile?.email ?? "";
 
+  const threadsTotalCost = threads.reduce((s, t) => s + t.estimatedCostUSD, 0);
+  const examsTotalCost = exams.reduce((s, e) => s + e.totalCostUSD, 0);
+  const totalCost = threadsTotalCost + examsTotalCost;
+
   return (
     <AdminShell
       title={name}
-      description={email}
+      description={email || "Detalhamento de uso por sessão e prova."}
       activeNav="usage"
       breadcrumbs={[
         { label: "Inicio", href: "/" },
@@ -93,6 +99,24 @@ export default async function AdminUsageUserPage({ params }: PageProps) {
       ]}
     >
       <div className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <StatCard
+            label="Sessões"
+            value={threads.length.toLocaleString("pt-BR")}
+            icon={<MessageSquare className="h-4 w-4" />}
+          />
+          <StatCard
+            label="Provas"
+            value={exams.length.toLocaleString("pt-BR")}
+            icon={<FileText className="h-4 w-4" />}
+          />
+          <StatCard
+            label="Custo total estimado"
+            value={`$${totalCost.toFixed(4)}`}
+            icon={<DollarSign className="h-4 w-4" />}
+          />
+        </div>
+
         <UsageThreadsTable threads={threads} />
         <UsageExamsTable exams={exams} />
       </div>

@@ -10,6 +10,7 @@ import {
 import { logError } from "@/services/observability/logger";
 import { createRequestContext } from "@/services/runtime/request-context";
 import { apiError, apiForbidden, apiNotFound, apiSuccess, apiUnauthorized, apiValidationError } from "@/services/errors/api-response";
+import { createServiceRoleClient } from "@/gateways/supabase/service-role";
 
 export const maxDuration = 300;
 
@@ -135,6 +136,7 @@ export async function POST(request: Request, { params }: RouteContext) {
     const ctx = createRequestContext({ examId });
     try {
       const bgSupabase = await createClient();
+      const usageSupabase = createServiceRoleClient() ?? bgSupabase;
       const result = await runAnalysisAndAdaptation(
         {
           examId,
@@ -246,7 +248,7 @@ export async function POST(request: Request, { params }: RouteContext) {
           runAdaptation: runAdaptationAgent,
           registerEvent: async () => {},
         },
-        bgSupabase,
+        usageSupabase,
       );
 
       if (result.outcome === "error") {

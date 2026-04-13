@@ -1,14 +1,17 @@
 import { withAdminRoute } from "@/app/api/admin/with-admin-route";
 import { apiSuccess, apiInternalError } from "@/services/errors/api-response";
 import type { AdminUsageUser } from "@/features/admin/usage/contracts";
+import { createServiceRoleClient } from "@/gateways/supabase/service-role";
 
 export const GET = withAdminRoute(async ({ supabase }) => {
+  const serviceSupabase = createServiceRoleClient() ?? supabase;
+
   const [threadsResult, examUsageResult] = await Promise.all([
     supabase
       .from("consultant_threads")
       .select("teacher_id, estimated_cost_usd, updated_at, profiles(full_name, email)")
       .not("managed_session_id", "is", null),
-    supabase
+    serviceSupabase
       .from("exam_usage")
       .select("exam_id, stage, estimated_cost_usd, created_at, exams!inner(user_id)"),
   ]);

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const requireAdminRouteAccess = vi.fn();
 const threadsListResult = vi.fn();
+const examUsageListResult = vi.fn();
 
 vi.mock("@/features/admin/shared/admin-guard", () => ({
   requireAdminRouteAccess,
@@ -34,6 +35,16 @@ vi.mock("@/gateways/supabase/server", () => ({
           }),
         };
       }
+      if (table === "exam_usage") {
+        const examSelectBuilder = {
+          eq: examUsageListResult,
+          then: (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) =>
+            examUsageListResult().then(resolve, reject),
+        };
+        return {
+          select: vi.fn().mockReturnValue(examSelectBuilder),
+        };
+      }
       throw new Error(`Unexpected table: ${table}`);
     },
   })),
@@ -43,6 +54,7 @@ describe("GET /api/admin/usage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireAdminRouteAccess.mockResolvedValue({ kind: "ok", userId: "admin-1" });
+    examUsageListResult.mockResolvedValue({ data: [], error: null });
   });
 
   it("deve retornar 401 para não-admin", async () => {
@@ -111,6 +123,7 @@ describe("GET /api/admin/usage/[userId]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     requireAdminRouteAccess.mockResolvedValue({ kind: "ok", userId: "admin-1" });
+    examUsageListResult.mockResolvedValue({ data: [], error: null });
   });
 
   it("deve retornar dados do usuário e lista de threads", async () => {
