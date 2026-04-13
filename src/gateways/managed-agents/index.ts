@@ -13,4 +13,5 @@ export type {
   SessionMessage,
   AgentConfig,
 } from "./types";
-export { syncSessionUsage, MODEL_PRICING, getPricingForModel, calculateSimpleCost } from "./usage";
+export { syncSessionUsage, getPricingForModel, calculateSimpleCost } from "./usage";
+export type { ModelPricing } from "./usage";

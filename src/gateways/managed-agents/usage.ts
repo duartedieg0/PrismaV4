@@ -1,49 +1,94 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { selectEvolutionModel } from "@/features/admin/models/service";
+import type { AdminModelRecord } from "@/features/admin/models/contracts";
 
-// NOTE: Preços por 1M tokens — atualizar se Anthropic alterar a tabela de preços.
-// Referência: https://www.anthropic.com/pricing
-type ModelPricing = {
+// Preços por 1M tokens — agora vêm do banco de dados (tabela ai_models).
+export type ModelPricing = {
   inputPerMillion: number;
   outputPerMillion: number;
   cacheReadPerMillion: number;
   cacheCreationPerMillion: number;
 };
 
-export const MODEL_PRICING: Record<string, ModelPricing> = {
-  "claude-sonnet-4-6": {
-    inputPerMillion: 0.80,
-    outputPerMillion: 4.00,
-    cacheReadPerMillion: 0.08,
-    cacheCreationPerMillion: 1.00,
-  },
-  "claude-haiku-4-5": {
-    inputPerMillion: 0.08,
-    outputPerMillion: 0.40,
-    cacheReadPerMillion: 0.008,
-    cacheCreationPerMillion: 0.10,
-  },
-  "claude-opus-4-6": {
-    inputPerMillion: 15.00,
-    outputPerMillion: 75.00,
-    cacheReadPerMillion: 1.50,
-    cacheCreationPerMillion: 18.75,
-  },
-};
+const MODEL_PRICE_FIELDS =
+  "id, model_id, is_default, enabled, input_price_per_million, output_price_per_million, cache_read_price_per_million, cache_creation_price_per_million";
 
-export function getPricingForModel(modelId: string): ModelPricing {
-  return MODEL_PRICING[modelId] ?? MODEL_PRICING["claude-sonnet-4-6"];
+export async function getPricingForModel(
+  supabase: SupabaseClient,
+  modelId: string,
+): Promise<ModelPricing> {
+  // 1. Tenta o modelo específico com input e output preenchidos
+  const { data: specificModel } = await supabase
+    .from("ai_models")
+    .select(MODEL_PRICE_FIELDS)
+    .eq("model_id", modelId)
+    .single();
+
+  if (
+    specificModel?.input_price_per_million != null &&
+    specificModel?.output_price_per_million != null
+  ) {
+    return rowToPricing(specificModel);
+  }
+
+  // 2. Fallback: modelo is_default com preço configurado
+  const { data: defaultModel } = await supabase
+    .from("ai_models")
+    .select(MODEL_PRICE_FIELDS)
+    .eq("is_default", true)
+    .single();
+
+  if (
+    defaultModel?.input_price_per_million != null &&
+    defaultModel?.output_price_per_million != null
+  ) {
+    return rowToPricing(defaultModel);
+  }
+
+  throw new Error(
+    `No pricing configured for model "${modelId}" and no default model with pricing found`,
+  );
+}
+
+function rowToPricing(row: Record<string, unknown>): ModelPricing {
+  return {
+    inputPerMillion: row.input_price_per_million as number,
+    outputPerMillion: row.output_price_per_million as number,
+    cacheReadPerMillion: (row.cache_read_price_per_million as number | null) ?? 0,
+    cacheCreationPerMillion: (row.cache_creation_price_per_million as number | null) ?? 0,
+  };
 }
 
 export function calculateSimpleCost(
   usage: { inputTokens: number; outputTokens: number },
-  modelId: string,
+  pricing: ModelPricing,
 ): number {
-  const pricing = getPricingForModel(modelId);
   return (
     (usage.inputTokens / 1_000_000) * pricing.inputPerMillion +
     (usage.outputTokens / 1_000_000) * pricing.outputPerMillion
   );
+}
+
+/**
+ * Busca todos os modelos do banco e aplica a lógica de seleção do modelo ativo
+ * (evolution → default → any enabled). Usado por syncSessionUsage.
+ *
+ * Limitação: consultant_threads não registra o model_id por mensagem —
+ * usamos o modelo ativo no momento do cálculo como aproximação.
+ */
+async function fetchActiveEvolutionModel(supabase: SupabaseClient): Promise<AdminModelRecord> {
+  const { data } = await supabase.from("ai_models").select(
+    "id, name, provider, base_url, api_key, model_id, enabled, is_default, system_role, created_at, input_price_per_million, output_price_per_million, cache_read_price_per_million, cache_creation_price_per_million",
+  );
+  const models = (data ?? []) as AdminModelRecord[];
+  const active = selectEvolutionModel(models);
+
+  if (!active) {
+    throw new Error("No active model found for usage calculation");
+  }
+
+  return active;
 }
 
 export async function syncSessionUsage(
@@ -61,7 +106,9 @@ export async function syncSessionUsage(
   const cacheReadTokens = usage.cache_read_input_tokens ?? 0;
   const cacheCreationTokens = usage.cache_creation_input_tokens ?? 0;
 
-  const pricing = getPricingForModel("claude-sonnet-4-6");
+  const activeModel = await fetchActiveEvolutionModel(supabase);
+  const pricing = await getPricingForModel(supabase, activeModel.model_id);
+
   const estimatedCostUsd =
     (inputTokens / 1_000_000) * pricing.inputPerMillion +
     (outputTokens / 1_000_000) * pricing.outputPerMillion +
