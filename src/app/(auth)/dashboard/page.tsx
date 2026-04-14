@@ -39,12 +39,27 @@ export default async function DashboardPage(_: StaticPageProps) {
     createClient: async () => supabase as any,
   });
 
+  const examIds = exams.map((exam) => exam.id);
+
+  const [{ count: questionsCount }, { count: feedbacksCount }] = await Promise.all([
+    examIds.length > 0
+      ? supabase
+          .from("questions")
+          .select("*", { count: "exact", head: true })
+          .in("exam_id", examIds)
+      : Promise.resolve({ count: 0 }),
+    examIds.length > 0
+      ? supabase
+          .from("feedbacks")
+          .select("*, adaptations!inner(questions!inner(exam_id))", { count: "exact", head: true })
+          .in("adaptations.questions.exam_id", examIds)
+      : Promise.resolve({ count: 0 }),
+  ]);
+
   const stats = {
     total: exams.length,
-    processing: exams.filter((exam) =>
-      ["uploading", "extracting", "awaiting_answers", "analyzing"].includes(exam.status),
-    ).length,
-    completed: exams.filter((exam) => exam.status === "completed").length,
+    questions: questionsCount ?? 0,
+    feedbacks: feedbacksCount ?? 0,
   };
 
   return (

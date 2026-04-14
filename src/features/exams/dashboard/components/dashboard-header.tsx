@@ -1,12 +1,12 @@
 import { StatCard } from "@/design-system/components/stat-card";
-import { FileText, Loader, CheckCircle } from "lucide-react";
+import { FileText, HelpCircle, MessageSquare } from "lucide-react";
 
 type DashboardHeaderProps = Readonly<{
   teacherName: string;
   stats: {
     total: number;
-    processing: number;
-    completed: number;
+    questions: number;
+    feedbacks: number;
   };
 }>;
 
@@ -26,15 +26,14 @@ export function DashboardHeader({ teacherName, stats }: DashboardHeaderProps) {
           icon={<FileText className="h-5 w-5" />}
         />
         <StatCard
-          label="Em processamento"
-          value={stats.processing}
-          icon={<Loader className="h-5 w-5" />}
+          label="Total de questões"
+          value={stats.questions}
+          icon={<HelpCircle className="h-5 w-5" />}
         />
         <StatCard
-          label="Concluídas"
-          value={stats.completed}
-          trend={stats.total > 0 ? `${Math.round((stats.completed / stats.total) * 100)}%` : undefined}
-          icon={<CheckCircle className="h-5 w-5" />}
+          label="Total de feedbacks"
+          value={stats.feedbacks}
+          icon={<MessageSquare className="h-5 w-5" />}
         />
       </div>
     </div>
