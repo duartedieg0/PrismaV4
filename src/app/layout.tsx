@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { IBM_Plex_Mono } from "next/font/google";
 import { Providers } from "@/app/providers";
+import { GoogleAnalytics } from "@/app/google-analytics";
 import "@/app/globals.css";
 
 const satoshi = localFont({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
     >
       <body>
         <Providers>{children}</Providers>
+        <GoogleAnalytics />
       </body>
     </html>
   );
