@@ -36,7 +36,7 @@ export default async function NewExamPage() {
       activeNav="new-exam"
       breadcrumbs={[
         { label: "Inicio", href: "/" },
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Nova adaptação", href: "/exams/new" },
       ]}
     >

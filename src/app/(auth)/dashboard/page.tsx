@@ -49,13 +49,13 @@ export default async function DashboardPage(_: StaticPageProps) {
 
   return (
     <TeacherShell
-      title="Dashboard"
+      title="Início"
       description="Acompanhe o status das provas, retome revisões pendentes e abra novas adaptações."
       activeNav="dashboard"
       primaryAction={{ label: "Nova Prova", href: "/exams/new", ariaLabel: "Nova adaptação" }}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
       ]}
     >
       <div className="grid gap-6">

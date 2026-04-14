@@ -9,12 +9,13 @@ export function PublicHero() {
         {/* Left: Copy */}
         <div className="flex flex-col gap-6">
           <h1 className="text-3xl font-extrabold leading-tight tracking-tight text-text-primary sm:text-4xl lg:text-5xl">
-            Diminua sobrecarga de trabalho, utilizando IA.
+            <em className="italic text-brand-600">Sua prova</em> já está pronta. A do <em className="italic text-brand-600">seu</em> <em className="italic text-brand-600">aluno</em> também.
           </h1>
           <p className="max-w-[540px] text-lg leading-relaxed text-text-secondary">
-            O projeto Prisma usa inteligência artificial para adaptar provas e avaliações
-            para estudantes com necessidades educacionais específicas — mantendo o rigor
-            pedagógico.
+            Transforme suas provas em versões acessíveis para cada perfil de aluno — preservando seus objetivos pedagógicos.
+          </p>
+          <p className="max-w-[540px] text-base leading-relaxed text-text-secondary border-l-2 border-brand-600 pl-4 italic">
+            O Adapta Prova foi feito por e para professores. Sabemos o quanto você carrega — querermos que a inclusão seja leve.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link href="/login">

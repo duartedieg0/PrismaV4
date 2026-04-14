@@ -36,7 +36,7 @@ export function TeacherShell({
   const supportAgentsEnabled = process.env.FEATURE_SUPPORT_AGENTS === "true";
 
   const navigationItems = [
-    { id: "dashboard" as const, label: "Dashboard", href: "/dashboard", icon: LayoutGrid },
+    { id: "dashboard" as const, label: "Início", href: "/dashboard", icon: LayoutGrid },
     { id: "new-exam" as const, label: "Nova Prova", href: "/exams/new", icon: FilePlus },
     ...(supportAgentsEnabled
       ? [{ id: "support" as const, label: "Agentes IA de Suporte", href: "/support", icon: Bot }]

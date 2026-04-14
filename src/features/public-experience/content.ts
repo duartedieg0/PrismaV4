@@ -106,7 +106,7 @@ export const finalCta: FinalCtaContent = {
 };
 
 export const footerCopy: FooterCopy = {
-  brand: "Adapte Minha Prova",
+  brand: "Adapta Prova",
   note:
     "Plataforma para apoiar professores na adaptação de avaliações com foco pedagógico e educação inclusiva.",
   copyright: "Todos os direitos reservados.",

@@ -19,7 +19,7 @@ export default async function ChatPage({ params }: Props) {
     <TeacherShell
       title={agent.name}
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Agentes IA de Suporte", href: "/support" },
         { label: agent.name, href: `/support/${agentSlug}` },
       ]}

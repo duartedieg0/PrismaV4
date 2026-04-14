@@ -56,7 +56,7 @@ export default async function ExtractionPage({ params }: ExtractionPageProps) {
       activeNav="results"
       breadcrumbs={[
         { label: "Inicio", href: "/" },
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Revisão da extração", href: `/exams/${examId}/extraction` },
       ]}
     >

@@ -10,7 +10,7 @@ import { useState, useEffect } from "react";
 const navLinks = [
   { label: "Como funciona", href: "#como-funciona" },
   { label: "Recursos", href: "#recursos" },
-  { label: "Depoimentos", href: "#depoimentos" },
+  { label: "Como a IA atua?", href: "#depoimentos" },
 ];
 
 export function PublicNavbar() {

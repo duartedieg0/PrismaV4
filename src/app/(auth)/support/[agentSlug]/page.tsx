@@ -20,7 +20,7 @@ export default async function AgentThreadsPage({ params }: Props) {
       title={agent.name}
       description={agent.description}
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Agentes IA de Suporte", href: "/support" },
         { label: agent.name, href: `/support/${agentSlug}` },
       ]}

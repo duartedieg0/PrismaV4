@@ -23,10 +23,10 @@ describe("app shells accessibility", () => {
   it("keeps the teacher shell accessible", async () => {
     const { container } = render(
       <TeacherShell
-        title="Dashboard"
+        title="Início"
         breadcrumbs={[
           { label: "Inicio", href: "/" },
-          { label: "Dashboard", href: "/dashboard" },
+          { label: "Início", href: "/dashboard" },
         ]}
         loadingMessage="Carregando provas"
         emptyMessage="Nenhuma prova criada."

@@ -26,7 +26,7 @@ const interfaceMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Adapte Minha Prova",
+  title: "Adapta Prova",
   description:
     "Adapte avaliações para estudantes com necessidades educacionais específicas em minutos.",
 };

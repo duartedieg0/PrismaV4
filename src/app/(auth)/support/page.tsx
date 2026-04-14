@@ -8,7 +8,7 @@ export default function SupportPage() {
       title="Agentes IA de Suporte"
       description="Converse com agentes especializados para tirar dúvidas sobre adaptação de avaliações."
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Agentes IA de Suporte", href: "/support" },
       ]}
       activeNav="support"

@@ -31,10 +31,10 @@ describe("app shells", () => {
   it("renders the teacher shell with loading and empty slots", () => {
     render(
       <TeacherShell
-        title="Dashboard"
+        title="Início"
         breadcrumbs={[
           { label: "Inicio", href: "/" },
-          { label: "Dashboard", href: "/dashboard" },
+          { label: "Início", href: "/dashboard" },
         ]}
         loadingSlot={<LoadingState message="Carregando provas" />}
         emptySlot={<EmptyState message="Nenhuma prova criada." />}
@@ -53,7 +53,7 @@ describe("app shells", () => {
 
     render(
       <TeacherShell
-        title="Dashboard"
+        title="Início"
         breadcrumbs={[{ label: "Inicio", href: "/" }]}
       >
         <p>conteudo</p>
@@ -68,7 +68,7 @@ describe("app shells", () => {
 
     render(
       <TeacherShell
-        title="Dashboard"
+        title="Início"
         breadcrumbs={[{ label: "Inicio", href: "/" }]}
       >
         <p>conteudo</p>

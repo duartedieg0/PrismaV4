@@ -33,7 +33,7 @@ export function BenefitsSection() {
     <section id="recursos" className="bg-surface-muted py-20">
       <div className="container-page">
         <h2 className="mb-12 text-center text-3xl font-bold tracking-tight text-text-primary">
-          Por que escolher o Prisma
+          Por que escolher o Adapta Prova
         </h2>
 
         <div className="grid gap-6 sm:grid-cols-2">

@@ -29,7 +29,7 @@ export function PublicFooter() {
           <div className="flex flex-col gap-4 lg:col-span-1">
             <Logo size="sm" variant="mono" />
             <p className="max-w-xs text-sm leading-relaxed text-white/60">
-              Plataforma educacional com IA para adaptar avaliações e promover inclusão na sala de aula.
+              Plataforma Educacional ✨ para adaptar avaliações e promover inclusão na sala de aula.
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export function PublicFooter() {
 
         <div className="mt-10 border-t border-brand-800 pt-6 text-center">
           <p className="text-xs text-white/40">
-            © {new Date().getFullYear()} Adapte Minha Prova. Todos os direitos reservados.
+            © {new Date().getFullYear()} Adapta Prova. Todos os direitos reservados.
           </p>
         </div>
       </div>

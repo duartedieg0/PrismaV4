@@ -3,7 +3,7 @@ const testimonials = [
     name: "Maria Silva",
     role: "Professora de Matemática",
     school: "Escola Municipal São Paulo",
-    quote: "Antes eu gastava um fim de semana inteiro adaptando provas. Com o Prisma, faço em 20 minutos e com mais qualidade.",
+    quote: "Antes eu gastava um fim de semana inteiro adaptando provas. Com o Adapta Prova, faço em 20 minutos e com mais qualidade.",
   },
   {
     name: "Carlos Oliveira",

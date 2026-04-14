@@ -101,7 +101,7 @@ describe("public experience content contract", () => {
 
   it("closes with institutional footer copy", () => {
     expect(footerCopy).toEqual({
-      brand: "Adapte Minha Prova",
+      brand: "Adapta Prova",
       note: "Plataforma para apoiar professores na adaptação de avaliações com foco pedagógico e educação inclusiva.",
       copyright: "Todos os direitos reservados.",
     });

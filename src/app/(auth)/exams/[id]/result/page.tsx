@@ -178,7 +178,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
       primaryAction={{ label: "Nova Prova", href: "/exams/new", ariaLabel: "Nova adaptação" }}
       breadcrumbs={[
         { label: "Inicio", href: "/" },
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Resultado", href: `/exams/${examId}/result` },
       ]}
     >

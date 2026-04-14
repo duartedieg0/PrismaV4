@@ -85,7 +85,7 @@ export default async function ProcessingPage({ params }: ProcessingPageProps) {
       activeNav="results"
       breadcrumbs={[
         { label: "Inicio", href: "/" },
-        { label: "Dashboard", href: "/dashboard" },
+        { label: "Início", href: "/dashboard" },
         { label: "Processamento", href: `/exams/${examId}/processing` },
       ]}
     >

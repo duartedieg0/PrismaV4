@@ -41,10 +41,10 @@ describe("exam repository", () => {
   it("renders teacher context and status-aware repository items", () => {
     render(
       <TeacherShell
-        title="Dashboard"
+        title="Início"
         breadcrumbs={[
           { label: "Inicio", href: "/" },
-          { label: "Dashboard", href: "/dashboard" },
+          { label: "Início", href: "/dashboard" },
         ]}
       >
         <DashboardHeader teacherName="Camila" stats={{ total: 2, processing: 1, completed: 0 }} />
