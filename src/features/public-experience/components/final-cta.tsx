@@ -3,7 +3,7 @@ import { Button } from "@/design-system/components/button";
 
 export function FinalCta() {
   return (
-    <section className="relative overflow-hidden bg-surface-dark py-16 lg:py-24">
+    <section id="ia" className="relative overflow-hidden bg-surface-dark py-16 lg:py-24">
       {/* Subtle radial gradient */}
       <div
         className="absolute inset-0"
