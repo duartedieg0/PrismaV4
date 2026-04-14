@@ -11,7 +11,7 @@ export function GoogleAnalytics() {
   useEffect(() => {
     if (!measurementId) return;
     gtag("event", "page_view", { page_path: pathname });
-  }, [pathname, measurementId]);
+  }, [pathname]);
 
   if (!measurementId) return null;
 
