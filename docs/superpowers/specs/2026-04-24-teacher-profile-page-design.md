@@ -11,13 +11,13 @@ Pagina de perfil para professores autenticados preencherem informacoes pessoais,
 
 - **Abordagem:** Pagina unica com 3 secoes (cards empilhados)
 - **Escolas:** Campo de texto livre
-- **Materias:** Multi-select da tabela `subjects` existente
-- **Niveis de ensino:** Multi-select da tabela `grade_levels` existente
+- **Materias:** Multi-select da tabela `subjects` existente (filtrado por `enabled = true`)
+- **Niveis de ensino:** Multi-select da tabela `grade_levels` existente (filtrado por `enabled = true`)
 - **Estado:** Select com 27 UFs
 - **Cidade:** Campo de texto livre
 - **Obrigatoriedade:** Semi-obrigatoria (banner no dashboard)
 - **Campos principais para completude:** telefone, cidade, estado
-- **Acesso:** Menu lateral + dropdown do avatar no header
+- **Acesso:** Menu lateral (link "Perfil" ja existente) + dropdown do avatar no header
 
 ---
 
@@ -27,16 +27,19 @@ Pagina de perfil para professores autenticados preencherem informacoes pessoais,
 
 Novos campos adicionados a tabela `profiles` existente:
 
-| Campo | Tipo | Obrigatorio | Descricao |
-|-------|------|-------------|-----------|
-| `phone` | `text` | nao | Telefone/WhatsApp |
-| `bio` | `text` | nao | Texto livre sobre o professor |
-| `state` | `text` | nao | UF (2 caracteres) |
-| `city` | `text` | nao | Cidade (texto livre) |
-| `schools` | `text` | nao | Escolas onde atua (texto livre) |
-| `years_experience` | `integer` | nao | Anos de experiencia |
-| `academic_background` | `text` | nao | Formacao academica |
-| `profile_completed` | `boolean` | nao | Default `false` - controla o banner de lembrete |
+| Campo | Tipo | Constraint | Descricao |
+|-------|------|------------|-----------|
+| `phone` | `text` | `CHECK(length(phone) <= 20)` | Telefone/WhatsApp |
+| `bio` | `text` | `CHECK(length(bio) <= 500)` | Texto livre sobre o professor |
+| `state` | `text` | `CHECK(length(state) = 2)` | UF (2 caracteres) |
+| `city` | `text` | `CHECK(length(city) <= 100)` | Cidade (texto livre) |
+| `schools` | `text` | `CHECK(length(schools) <= 500)` | Escolas onde atua (texto livre) |
+| `years_experience` | `integer` | `CHECK(years_experience >= 0)` | Anos de experiencia |
+| `academic_background` | `text` | `CHECK(length(academic_background) <= 200)` | Formacao academica |
+| `profile_completed` | `boolean` | `DEFAULT false` | Controla o banner de lembrete |
+| `updated_at` | `timestamptz` | `DEFAULT now()` | Ultima atualizacao do perfil |
+
+Trigger para atualizar `updated_at` automaticamente no UPDATE.
 
 ### 1.2 Tabelas de relacionamento (many-to-many)
 
@@ -52,10 +55,14 @@ Novos campos adicionados a tabela `profiles` existente:
 
 ### 1.3 RLS (Row Level Security)
 
-- `profiles`: professor so le/atualiza o proprio perfil (policy ja existente, verificar se cobre os novos campos)
-- `profile_subjects`: professor so le/escreve as proprias associacoes (`auth.uid() = profile_id`)
-- `profile_grade_levels`: professor so le/escreve as proprias associacoes (`auth.uid() = profile_id`)
-- Admins podem ler tudo (via funcao `is_admin()` existente)
+Ambas as tabelas de relacionamento devem ter RLS habilitado (`ALTER TABLE ... ENABLE ROW LEVEL SECURITY`).
+
+Policies para `profile_subjects` e `profile_grade_levels`:
+- **SELECT:** `auth.uid() = profile_id` (professor le as proprias) + `is_admin()` (admin le todas)
+- **INSERT:** `auth.uid() = profile_id` (professor insere as proprias)
+- **DELETE:** `auth.uid() = profile_id` (professor deleta as proprias, necessario para sincronizacao)
+
+Policies existentes em `profiles`: verificar se a policy de UPDATE cobre os novos campos (campos adicionados via ALTER TABLE sao cobertos automaticamente).
 
 ---
 
@@ -64,32 +71,40 @@ Novos campos adicionados a tabela `profiles` existente:
 ### 2.1 Rota e layout
 
 - Rota: `/profile` dentro do grupo `(auth)` - requer autenticacao
-- Usa o mesmo layout autenticado do dashboard (sidebar + header)
+- Usa o mesmo layout autenticado do dashboard (`TeacherShell`)
+- O link "Perfil" ja existe no footer da sidebar do `TeacherShell` — nao e necessario modificar `activeNav`
 
 ### 2.2 Estrutura do formulario
 
-A pagina tem um `PageHeader` com titulo "Meu Perfil" e breadcrumb (Dashboard > Meu Perfil), seguido de 3 Cards empilhados verticalmente:
+A pagina tem um `PageHeader` com titulo "Meu Perfil" e breadcrumb (`[{ label: "Inicio", href: "/dashboard" }, { label: "Meu Perfil" }]`), seguido de 3 Cards empilhados verticalmente:
 
 **Card 1 - Dados Pessoais**
 - Avatar (exibicao apenas, vem do Google)
 - Nome completo (input, pre-preenchido do Google)
-- Telefone/WhatsApp (input com mascara)
-- Bio (textarea, placeholder: "Conte um pouco sobre voce e sua atuacao...")
+- Telefone/WhatsApp (input com mascara formato `(11) 99999-9999`)
+- Bio (textarea, max 500 chars, placeholder: "Conte um pouco sobre voce e sua atuacao...")
 
 **Card 2 - Localizacao**
-- Estado (select com as 27 UFs)
-- Cidade (input texto livre)
+- Estado (select nativo `<select>` com as 27 UFs)
+- Cidade (input texto livre, max 100 chars)
 
 **Card 3 - Atuacao Profissional**
-- Escolas onde atua (textarea, texto livre)
-- Materias que leciona (multi-select com checkboxes, carregado de `subjects`)
-- Niveis de ensino (multi-select com checkboxes, carregado de `grade_levels`)
-- Anos de experiencia (input numerico)
-- Formacao academica (input texto)
+- Escolas onde atua (textarea, max 500 chars, texto livre)
+- Materias que leciona (grupo de checkboxes, carregado de `subjects` onde `enabled = true`)
+- Niveis de ensino (grupo de checkboxes, carregado de `grade_levels` onde `enabled = true`)
+- Anos de experiencia (input numerico, min 0)
+- Formacao academica (input texto, max 200 chars)
 
 ### 2.3 Botao de acao
 
-Botao "Salvar perfil" fixo no final da pagina. Feedback com toast de sucesso/erro.
+Botao "Salvar perfil" no final da pagina. Feedback com toast via `sonner` (sucesso/erro).
+
+### 2.4 Estados da pagina
+
+- **Loading:** Skeleton cards enquanto Server Component busca dados
+- **Erro no save:** Toast de erro via `sonner` com mensagem descritiva
+- **Listas vazias:** Se `subjects` ou `grade_levels` estiverem vazios, exibir texto "Nenhuma opcao disponivel" no lugar dos checkboxes
+- **Sucesso:** Toast de sucesso "Perfil salvo com sucesso"
 
 ---
 
@@ -97,14 +112,14 @@ Botao "Salvar perfil" fixo no final da pagina. Feedback com toast de sucesso/err
 
 ### 3.1 Pontos de acesso
 
-1. **Sidebar** - novo item "Meu Perfil" no menu lateral (icone de usuario), abaixo do Dashboard
-2. **Header** - ao clicar no avatar/nome no canto superior, abre dropdown com opcao "Meu Perfil" (e "Sair")
+1. **Sidebar** - link "Perfil" ja existente no footer do `TeacherShell` (apontar para `/profile`)
+2. **Header** - ao clicar no avatar/nome no canto superior, abre dropdown com opcoes "Meu Perfil" e "Sair". Novo componente `UserDropdown` necessario.
 
 ### 3.2 Banner no dashboard
 
-Banner discreto no topo do dashboard quando `profile_completed === false`:
+Componente `ProfileCompletionBanner` no topo do dashboard quando `profile_completed === false`:
 
-> "Complete seu perfil para uma experiencia personalizada" - com link para `/profile`
+> "Complete seu perfil para uma experiencia personalizada" — com link para `/profile`
 
 O banner some quando o professor salva o perfil com telefone, cidade e estado preenchidos.
 
@@ -116,7 +131,7 @@ O banner some quando o professor salva o perfil com telefone, cidade e estado pr
 2. Se `profile_completed === false`, ve o banner de lembrete no topo
 3. Clica no link do banner, no menu lateral, ou no avatar -> vai para `/profile`
 4. Preenche os campos e clica "Salvar perfil"
-5. Server action valida e salva na tabela `profiles` + tabelas de relacionamento
+5. API route `PUT /api/profile` valida e salva na tabela `profiles` + sincroniza tabelas de relacionamento (delete all + re-insert)
 6. Se telefone, cidade e estado estao preenchidos -> `profile_completed = true`
 7. Toast de sucesso, banner desaparece do dashboard
 
@@ -124,22 +139,37 @@ O banner some quando o professor salva o perfil com telefone, cidade e estado pr
 
 ## 5. Tratamento de Dados
 
-- **Server Action** para salvar - uma unica action que faz upsert no `profiles` e sincroniza `profile_subjects` e `profile_grade_levels`
-- **Carregamento** - Server Component busca dados do perfil, materias e niveis de ensino em paralelo e passa ao Client Component do formulario
-- **Validacao** - campos de texto com limite de caracteres, `years_experience` >= 0, `state` deve ser UF valida quando preenchido
+### 5.1 API Route
+
+- **`PUT /api/profile`** - recebe JSON com todos os campos do perfil + arrays de IDs de subjects e grade_levels
+- Segue o padrao existente do projeto (ex: `POST /api/exams`)
+- Usa o Supabase client server-side para upsert no `profiles` e sincronizar `profile_subjects` e `profile_grade_levels`
+
+### 5.2 Carregamento
+
+- Server Component busca em paralelo: dados do perfil, subjects (enabled), grade_levels (enabled), profile_subjects e profile_grade_levels do professor
+- Passa dados ao Client Component do formulario
+- Nova funcao `getFullProfile()` separada de `getProfileOrRedirect()` (que busca apenas campos basicos para auth)
+
+### 5.3 Validacao
+
+- Frontend: limites de caracteres nos inputs, formato de telefone, UF valida
+- Backend (API route): mesmas validacoes + sanitizacao antes de salvar
+- Database: CHECK constraints como ultima linha de defesa
 
 ---
 
-## 6. Componentes do Design System Utilizados
+## 6. Componentes
 
-Componentes existentes que serao reutilizados:
+### Componentes existentes reutilizados
 - `Card`, `CardHeader`, `CardTitle`, `CardDescription`
 - `Button` (variante primary)
 - `Input`, `Textarea`
 - `PageHeader` com `Breadcrumbs`
 - `Avatar`
-- `Badge` (para o banner)
 
-Componentes novos necessarios:
-- `Select` - componente de select dropdown (para UF)
-- `MultiSelect` / `CheckboxGroup` - para selecao de materias e niveis de ensino
+### Componentes novos necessarios
+- `Select` - componente de select dropdown estilizado (para UF)
+- `CheckboxGroup` - grupo de checkboxes para selecao multipla (materias e niveis)
+- `UserDropdown` - dropdown do avatar no header com links (Meu Perfil, Sair)
+- `ProfileCompletionBanner` - banner de lembrete para o dashboard
