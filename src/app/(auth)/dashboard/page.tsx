@@ -6,6 +6,7 @@ import { DashboardHeader } from "@/features/exams/dashboard/components/dashboard
 import { ExamRepository } from "@/features/exams/dashboard/components/exam-repository";
 import { ExamRepositoryEmpty } from "@/features/exams/dashboard/components/exam-repository-empty";
 import { listTeacherExams } from "@/features/exams/dashboard/list-teacher-exams";
+import { ProfileCompletionBanner } from "@/features/profile/components/profile-completion-banner";
 
 type StaticPageProps = {
   params: Promise<Record<string, never>>;
@@ -32,6 +33,8 @@ export default async function DashboardPage(_: StaticPageProps) {
   if (profileResult.kind === "redirect") {
     redirect(profileResult.redirectTo);
   }
+
+  const showProfileBanner = !profileResult.profile.profile_completed;
 
   const exams = await listTeacherExams({
     teacherId: profileResult.profile.id,
@@ -73,6 +76,7 @@ export default async function DashboardPage(_: StaticPageProps) {
         { label: "Início", href: "/dashboard" },
       ]}
     >
+      {showProfileBanner ? <ProfileCompletionBanner /> : null}
       <div className="grid gap-6">
         <DashboardHeader
           teacherName={getTeacherFirstName(profileResult.profile.full_name ?? null)}
