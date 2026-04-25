@@ -6,6 +6,7 @@ type ProfileRecord = {
   email: string | null;
   role: "teacher" | "admin";
   blocked: boolean;
+  profile_completed: boolean;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -22,7 +23,7 @@ async function readProfileWithFallback(
   const supabase = await createClient();
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, full_name, email, role, blocked")
+    .select("id, full_name, email, role, blocked, profile_completed")
     .eq("id", userId)
     .single();
 
@@ -42,7 +43,7 @@ async function readProfileWithFallback(
 
   const { data: serviceProfile } = await serviceRoleClient
     .from("profiles")
-    .select("id, full_name, email, role, blocked")
+    .select("id, full_name, email, role, blocked, profile_completed")
     .eq("id", userId)
     .maybeSingle();
 
