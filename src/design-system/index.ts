@@ -1,6 +1,7 @@
 // Components
 export { Button } from "./components/button";
 export { Input, Textarea } from "./components/input";
+export { Select } from "./components/select";
 export { Card, CardHeader, CardTitle, CardDescription } from "./components/card";
 export { Badge } from "./components/badge";
 export { Logo } from "./components/logo";
