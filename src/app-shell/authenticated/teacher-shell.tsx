@@ -4,6 +4,7 @@ import { Logo } from "@/design-system/components/logo";
 import { Breadcrumbs } from "@/design-system/components/breadcrumbs";
 import { PageHeader } from "@/design-system/components/page-header";
 import { Button } from "@/design-system/components/button";
+import { Avatar } from "@/design-system/components/avatar";
 import { LayoutGrid, FilePlus, LogOut, User, Bot } from "lucide-react";
 
 type TeacherShellProps = Readonly<{
@@ -21,6 +22,7 @@ type TeacherShellProps = Readonly<{
   loadingSlot?: React.ReactNode;
   emptySlot?: React.ReactNode;
   children: React.ReactNode;
+  user?: { name: string; avatarUrl?: string };
 }>;
 
 export function TeacherShell({
@@ -32,6 +34,7 @@ export function TeacherShell({
   loadingSlot,
   emptySlot,
   children,
+  user,
 }: TeacherShellProps) {
   const supportAgentsEnabled = process.env.FEATURE_SUPPORT_AGENTS === "true";
 
@@ -128,6 +131,11 @@ export function TeacherShell({
             );
           })}
         </div>
+        {user ? (
+          <Link href="/profile" aria-label="Meu Perfil">
+            <Avatar name={user.name} src={user.avatarUrl} size="sm" />
+          </Link>
+        ) : null}
       </div>
 
       {/* Main content */}

@@ -75,6 +75,9 @@ export default async function DashboardPage(_: StaticPageProps) {
         { label: "Inicio", href: "/" },
         { label: "Início", href: "/dashboard" },
       ]}
+      user={{
+        name: profileResult.profile.full_name ?? "Professor",
+      }}
     >
       {showProfileBanner ? <ProfileCompletionBanner /> : null}
       <div className="grid gap-6">
