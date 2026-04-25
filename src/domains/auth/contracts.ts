@@ -20,4 +20,5 @@ export interface Profile {
   role: UserRole;
   blocked: boolean;
   created_at: string;
+  profile_completed: boolean;
 }
